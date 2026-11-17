@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.29">
+<meta name="version" content="v.30">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -141,6 +141,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
 .devgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.devgrid .btn{font-size:14px;padding:6px 8px}
 @media(max-width:600px){.devgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .hv{border-top:2px solid var(--line);padding:12px 0}.hv h5{margin:0 0 4px;font:700 20px Fredoka,sans-serif;display:flex;gap:10px;align-items:baseline}.hv h5 small{font:700 13px Nunito,sans-serif;color:var(--soft)}.hv ul{margin:0;padding-left:20px}.hv li{margin:3px 0}.hv.now h5::after{content:'this version';font:800 11px Nunito,sans-serif;background:#1c2536;color:#fff;border-radius:999px;padding:2px 8px}
+.ta{min-height:auto;resize:vertical;font-family:inherit;line-height:1.4}
 .foot{display:flex;justify-content:flex-end;margin-top:20px;gap:8px;position:sticky;bottom:-24px;background:#fff;padding:12px 0}
 .cele{text-align:center}
 .celelist{list-style:none;margin:0 auto 18px;padding:0;max-width:420px;text-align:left;display:grid;gap:6px}.celelist li{display:grid;grid-template-columns:32px 16px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px;border-radius:12px;background:#f1f5fb;font-weight:800}.celelist li:first-child{background:#fff6d6;outline:2px solid #e9b949}.celelist .rk{font:700 20px Fredoka,sans-serif;text-align:center}
@@ -156,7 +157,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" id="verTag" title="Quiet Climb version — click for history" style="cursor:pointer">v.29</span>
+      <span class="ver" id="verTag" title="Quiet Climb version — click for history" style="cursor:pointer">v.30</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -226,6 +227,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <p class="hint">Every class's height, trophies and wins save automatically in this browser and survive reloads and updates. Progress is kept per web address, so use the same link on the classroom computer every time. Save a backup file now and then to be extra safe, or to move to another computer.</p>
     <div class="calrow"><button class="btn" id="exportBtn">Save backup file</button><label class="btn" for="importFile" style="display:inline-flex;align-items:center">Load backup file</label><input type="file" id="importFile" accept=".json,application/json" hidden><span class="calmsg" id="bakMsg"></span></div>
     <div class="danger">
+      <button class="btn" id="custBtn">Customize the mountain</button>
       <button class="btn" id="histBtn">Version history</button>
       <button class="btn" id="practiceBtn">Practice mode</button>
       <button class="btn warn" id="resetBtn">Reset all climbs to base camp</button>
@@ -246,7 +248,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
           <button class="btn" data-dev="fall1">Fall 1 checkpoint</button><button class="btn" data-dev="fall2">Fall 2 checkpoints</button><button class="btn" data-dev="fall3">Fall 3 + lose treasure</button>
           <button class="btn" data-dev="diver">Skydivers</button><button class="btn" data-dev="silly">Silly flyby</button><button class="btn" data-dev="plane">Banner plane</button>
           <button class="btn" data-dev="geese">Geese V</button><button class="btn" data-dev="eagle">Close eagle</button><button class="btn" data-dev="pebbles">Falling pebbles</button>
-          <button class="btn" data-dev="everest">Everest celebration</button><button class="btn" data-dev="gear">Replay gear-up</button><button class="btn warn" data-dev="lock">Lock dev mode</button>
+          <button class="btn" data-dev="everest">Everest celebration</button><button class="btn" data-dev="gear">Replay gear-up</button><button class="btn" data-dev="sign">Custom sign</button><button class="btn warn" data-dev="lock">Lock dev mode</button>
         </div>
       </div>
     </div>
@@ -254,6 +256,29 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
   </div>
 </div>
 
+<div class="modal" id="cust" role="dialog" aria-modal="true" aria-labelledby="custH">
+  <div class="sheet">
+    <h3 id="custH">Customize the mountain</h3>
+    <p class="lead">Make it your school’s mountain. Messages show up on the cliff as the climber passes: wooden signs, nailed banners or words carved into the rock.</p>
+    <label class="lb" for="cSchool">School name</label>
+    <input class="in" id="cSchool" placeholder="Shore Road" autocomplete="off">
+    <p class="hint">Adds things like “GO SHORE ROAD!” to the cliff and to the banner planes.</p>
+    <label class="lb">Sign style</label>
+    <div class="seg" id="cStyle"></div>
+    <label class="lb">How often</label>
+    <div class="seg" id="cFreq"></div>
+    <label class="lb" for="cAll">Messages for every class <span class="hint">(one per line)</span></label>
+    <textarea class="in ta" id="cAll" rows="4" placeholder="Shore Road Sharks!&#10;Be kind, climb high&#10;Room 12 rocks"></textarea>
+    <h4>Just for one class</h4>
+    <select class="in" id="cClass"></select>
+    <label class="lb" for="cPer">Messages for this class <span class="hint">(one per line)</span></label>
+    <textarea class="in ta" id="cPer" rows="3" placeholder="Homeroom heroes&#10;Quiet is our superpower"></textarea>
+    <label class="lb" for="cNames">Kids’ names <span class="hint">(one per line)</span></label>
+    <textarea class="in ta" id="cNames" rows="4" placeholder="Ava&#10;Liam&#10;Sofia"></textarea>
+    <p class="hint">Names turn into things like “Ava was here!”, “Go Liam!” or “Sofia rocks!”, scattered up the mountain.</p>
+    <div class="foot"><button class="btn primary" id="custClose">Done</button></div>
+  </div>
+</div>
 <div class="modal" id="hist" role="dialog" aria-modal="true" aria-labelledby="histH">
   <div class="sheet"><h3 id="histH">Version history</h3><p class="lead">Everything added to Quiet Climb, newest first. Versions 1 to 10 were numbered afterwards.</p><div id="histList"></div>
   <div class="foot"><button class="btn primary" id="histClose">Close</button></div></div>
@@ -345,7 +370,7 @@ function goalVal(){
   return {silent:30,independent:45,partner:60}[S.goal];
 }
 // Version history shown in Settings. Add a new entry at the top with every update.
-const CHANGELOG=[{"v": "v.29", "d": "Nov 17, 2026", "items": ["The race chip fades in when something changes, stays about 8 seconds, then fades out and pops back now and then (every 20 s when a class is close, otherwise every 45 s).","The chip wraps onto two lines so it never covers the climber."]},{"v": "v.28", "d": "Nov 17, 2026", "items": ["Chip now says “Another class is higher up the mountain… let’s try to catch them!”"]},{"v": "v.27", "d": "Nov 17, 2026", "items": ["Version history in Settings (this list); click the version stamp to open it."]}, {"v": "v.26", "d": "Nov 17, 2026", "items": ["“Next to beat” chip under the points: names the class ahead only within 100 ft, warns when a class is close behind, shows when you’re in the lead.", "Leaderboard hidden by default (Settings → Leaderboard to show it).", "Rival flags on the cliff show ??? until you’re close.", "End of the week reveals the full final standings with medals."]}, {"v": "v.25", "d": "Nov 17, 2026", "items": ["Staying loud drains 1 point every 2 seconds.", "Red “points lost” bar and shaking points box so kids can see points slipping away.", "Bigger red and green point pop-ups."]}, {"v": "v.24", "d": "Nov 17, 2026", "items": ["Fixed the points counter flickering back and forth."]}, {"v": "v.23", "d": "Nov 17, 2026", "items": ["Live points score: 1 per foot, 10 per checkpoint, treasure points, plus quiet %.", "Trophy case points: common 5, rare 20, legendary 100.", "Points lost for warnings and falls."]}, {"v": "v.22", "d": "Nov 17, 2026", "items": ["Developer menu in Settings (PIN): jump to a height and play any animation on demand."]}, {"v": "v.21", "d": "Nov 17, 2026", "items": ["Tough falls max out at 3 checkpoints (never back to base camp) and trigger at lower noise.", "If it gets louder while he’s hanging, he slips further, live."]}, {"v": "v.20", "d": "Nov 17, 2026", "items": ["Skydivers in the background: freefall, then parachutes, sometimes in groups."]}, {"v": "v.19", "d": "Nov 17, 2026", "items": ["Height-fact banners switch between feet and metres."]}, {"v": "v.18", "d": "Nov 17, 2026", "items": ["Heights shown in feet by default, with a Feet / Metres setting."]}, {"v": "v.17", "d": "Nov 17, 2026", "items": ["Birds near and far (eagles, geese, gulls), small planes with banners, very rare silly flybys."]}, {"v": "v.16", "d": "Nov 17, 2026", "items": ["Climber flails and swings while hanging until the room is quiet.", "Rare treasures fly in; legendary ones hide in a hole in the rock.", "The cliff changes colour and shape every 100 m, with a mist band and label.", "Falling pebbles and drifting leaves."]}, {"v": "v.15", "d": "Nov 17, 2026", "items": ["Trophy case keeps the total a mystery and counts Common, Rare and Legendary in matching colours."]}, {"v": "v.14", "d": "Nov 17, 2026", "items": ["Progress saves automatically and survives reloads and updates; backup file save and load.", "Carabiner clip at every checkpoint is a clear three-step moment.", "Louder noise means bigger falls (several levels)."]}, {"v": "v.13", "d": "Nov 17, 2026", "items": ["Clear microphone messages and a Try again button, no reload needed."]}, {"v": "v.12", "d": "Nov 17, 2026", "items": ["Faster climb speeds: Slow, Normal, Fast and a new Turbo."]}, {"v": "v.11", "d": "Nov 17, 2026", "items": ["Version stamp next to the class picker."]}, {"v": "v.10", "d": "Nov 17, 2026", "items": ["100 real-world height achievements pop up as banners with fun facts."]}, {"v": "v.9", "d": "Nov 17, 2026", "items": ["Mountaineering boots with crampon spikes.", "Rock chips, sparks and dust on every axe hit, handhold and step."]}, {"v": "v.8", "d": "Nov 17, 2026", "items": ["Game put on GitHub so it can have a live link with the microphone."]}, {"v": "v.7", "d": "Nov 17, 2026", "items": ["Back to the code-drawn climber, rebuilt rounder and cleaner (cut-out version scrapped)."]}, {"v": "v.6", "d": "Nov 17, 2026", "items": ["Tried a climber cut out of the pose sheet (scrapped)."]}, {"v": "v.5", "d": "Nov 17, 2026", "items": ["Every treasure is random; rare and legendary finds get big celebrations.", "Shareable preview link."]}, {"v": "v.4", "d": "Nov 17, 2026", "items": ["Climber poses based on the reference sheet: base camp, reach, push, clip, pause, caught."]}, {"v": "v.3", "d": "Nov 17, 2026", "items": ["Elbows bend the right way.", "Slower climb, treasures on ledges to collect, trophy case.", "Right-hand bar shows progress to the next checkpoint."]}, {"v": "v.2", "d": "Nov 17, 2026", "items": ["Close-up side view: cliff on the left, full-size climber in the middle, no summit.", "Gear-up at base camp, checkpoints, look-then-fall when it’s loud.", "Microphone choice and calibration; zones and scenery as you climb."]}, {"v": "v.1", "d": "Nov 17, 2026", "items": ["First build: classes race up a mountain trail; quiet moves the climber up, noise brings wind.", "Teacher name in the title, volume goals, practice mode."]}];
+const CHANGELOG=[{"v": "v.30", "d": "Nov 17, 2026", "items": ["Customize the mountain (Settings): school name, messages for every class or one class, and kids’ names.","Messages appear on the cliff as wooden signs, nailed banners or words carved into the rock.","Banner planes can cheer for your school.","Dev menu: Custom sign button."]},{"v": "v.29", "d": "Nov 17, 2026", "items": ["The race chip fades in when something changes, stays about 8 seconds, then fades out and pops back now and then (every 20 s when a class is close, otherwise every 45 s).","The chip wraps onto two lines so it never covers the climber."]},{"v": "v.28", "d": "Nov 17, 2026", "items": ["Chip now says “Another class is higher up the mountain… let’s try to catch them!”"]},{"v": "v.27", "d": "Nov 17, 2026", "items": ["Version history in Settings (this list); click the version stamp to open it."]}, {"v": "v.26", "d": "Nov 17, 2026", "items": ["“Next to beat” chip under the points: names the class ahead only within 100 ft, warns when a class is close behind, shows when you’re in the lead.", "Leaderboard hidden by default (Settings → Leaderboard to show it).", "Rival flags on the cliff show ??? until you’re close.", "End of the week reveals the full final standings with medals."]}, {"v": "v.25", "d": "Nov 17, 2026", "items": ["Staying loud drains 1 point every 2 seconds.", "Red “points lost” bar and shaking points box so kids can see points slipping away.", "Bigger red and green point pop-ups."]}, {"v": "v.24", "d": "Nov 17, 2026", "items": ["Fixed the points counter flickering back and forth."]}, {"v": "v.23", "d": "Nov 17, 2026", "items": ["Live points score: 1 per foot, 10 per checkpoint, treasure points, plus quiet %.", "Trophy case points: common 5, rare 20, legendary 100.", "Points lost for warnings and falls."]}, {"v": "v.22", "d": "Nov 17, 2026", "items": ["Developer menu in Settings (PIN): jump to a height and play any animation on demand."]}, {"v": "v.21", "d": "Nov 17, 2026", "items": ["Tough falls max out at 3 checkpoints (never back to base camp) and trigger at lower noise.", "If it gets louder while he’s hanging, he slips further, live."]}, {"v": "v.20", "d": "Nov 17, 2026", "items": ["Skydivers in the background: freefall, then parachutes, sometimes in groups."]}, {"v": "v.19", "d": "Nov 17, 2026", "items": ["Height-fact banners switch between feet and metres."]}, {"v": "v.18", "d": "Nov 17, 2026", "items": ["Heights shown in feet by default, with a Feet / Metres setting."]}, {"v": "v.17", "d": "Nov 17, 2026", "items": ["Birds near and far (eagles, geese, gulls), small planes with banners, very rare silly flybys."]}, {"v": "v.16", "d": "Nov 17, 2026", "items": ["Climber flails and swings while hanging until the room is quiet.", "Rare treasures fly in; legendary ones hide in a hole in the rock.", "The cliff changes colour and shape every 100 m, with a mist band and label.", "Falling pebbles and drifting leaves."]}, {"v": "v.15", "d": "Nov 17, 2026", "items": ["Trophy case keeps the total a mystery and counts Common, Rare and Legendary in matching colours."]}, {"v": "v.14", "d": "Nov 17, 2026", "items": ["Progress saves automatically and survives reloads and updates; backup file save and load.", "Carabiner clip at every checkpoint is a clear three-step moment.", "Louder noise means bigger falls (several levels)."]}, {"v": "v.13", "d": "Nov 17, 2026", "items": ["Clear microphone messages and a Try again button, no reload needed."]}, {"v": "v.12", "d": "Nov 17, 2026", "items": ["Faster climb speeds: Slow, Normal, Fast and a new Turbo."]}, {"v": "v.11", "d": "Nov 17, 2026", "items": ["Version stamp next to the class picker."]}, {"v": "v.10", "d": "Nov 17, 2026", "items": ["100 real-world height achievements pop up as banners with fun facts."]}, {"v": "v.9", "d": "Nov 17, 2026", "items": ["Mountaineering boots with crampon spikes.", "Rock chips, sparks and dust on every axe hit, handhold and step."]}, {"v": "v.8", "d": "Nov 17, 2026", "items": ["Game put on GitHub so it can have a live link with the microphone."]}, {"v": "v.7", "d": "Nov 17, 2026", "items": ["Back to the code-drawn climber, rebuilt rounder and cleaner (cut-out version scrapped)."]}, {"v": "v.6", "d": "Nov 17, 2026", "items": ["Tried a climber cut out of the pose sheet (scrapped)."]}, {"v": "v.5", "d": "Nov 17, 2026", "items": ["Every treasure is random; rare and legendary finds get big celebrations.", "Shareable preview link."]}, {"v": "v.4", "d": "Nov 17, 2026", "items": ["Climber poses based on the reference sheet: base camp, reach, push, clip, pause, caught."]}, {"v": "v.3", "d": "Nov 17, 2026", "items": ["Elbows bend the right way.", "Slower climb, treasures on ledges to collect, trophy case.", "Right-hand bar shows progress to the next checkpoint."]}, {"v": "v.2", "d": "Nov 17, 2026", "items": ["Close-up side view: cliff on the left, full-size climber in the middle, no summit.", "Gear-up at base camp, checkpoints, look-then-fall when it’s loud.", "Microphone choice and calibration; zones and scenery as you climb."]}, {"v": "v.1", "d": "Nov 17, 2026", "items": ["First build: classes race up a mountain trail; quiet moves the climber up, noise brings wind.", "Teacher name in the title, volume goals, practice mode."]}];
 const FT=3.28084;
 // Show a banner's numbers in the chosen unit. Where the original measurement was in feet, the exact source figure is used.
 function bannerText(a){
@@ -734,7 +759,9 @@ function drawClouds(front){
 /* ---------- the sky is alive: birds near and far, little planes, and very rare silly things ---------- */
 // depth 0 = far away (small, slow, hazy, behind the cliff), 1 = middle, 2 = close (big, fast, in front of the climber)
 const DEPTH=[{s:.45,v:.45,a:.55},{s:1,v:1,a:1},{s:2.1,v:1.9,a:1}];
-const BANNERS=['SHHH… CLIMBERS AT WORK','GO CLIMBERS GO!','QUIET = HIGHER','HI CLASS!','KEEP CLIMBING!','YOU CAN DO IT!'];
+const BANNERS0=['SHHH… CLIMBERS AT WORK','GO CLIMBERS GO!','QUIET = HIGHER','HI CLASS!','KEEP CLIMBING!','YOU CAN DO IT!'];
+const BANNERS={get length(){return BANNERS0.length+(S.deco&&S.deco.school?2:0)}};
+function pickBanner(){const sc=S.deco&&S.deco.school;const list=sc?BANNERS0.concat(['GO '+sc.toUpperCase()+'!',sc.toUpperCase()+' CLIMBERS ROCK!']):BANNERS0;return list[Math.floor(Math.random()*list.length)]}
 const SILLY=[['🐖','wings'],['🐄','balloons'],['🦆','balloons'],['🍕','wings'],['🐳','wings'],['🧦','wings'],['🥪','wings'],['🐟','wings'],['🪑','balloons'],['🦖','balloons'],['🐈','balloons'],['🍩','wings'],['🎂','balloons'],['🐸','balloons'],['🛁','balloons'],['🐌','wings']];
 let fT={bird:2,plane:rnd(25,50),silly:rnd(90,200),fly:3,diver:rnd(20,45)}, sillySaw=0;
 function spawn(kind,depth,o){birds.push(Object.assign({kind,depth,x:W+80*DEPTH[depth].s,y:rnd(.08,.5)*H,s:DEPTH[depth].s*rnd(.8,1.2),p:rnd(0,6),c:PAL[Math.floor(Math.random()*PAL.length)]},o))}
@@ -752,7 +779,7 @@ function spawnFlyers(dt,m){
   if(fT.fly<0){fT.fly=rnd(6,14);const r=Math.random();
     if(m<150&&r<.45)spawn('fly',1,{v:rnd(28,45)});else if(m<200&&r<.6)spawn('leaf',1,{v:rnd(40,80)});else if(m>=300&&m<900&&r<.3)spawn('balloon',Math.random()<.5?0:1,{v:rnd(14,24)})}
   if(fT.plane<0){fT.plane=rnd(35,80);const d=Math.random()<.5?0:1;
-    if(m<1800)spawn('prop',d,{v:rnd(90,130),banner:Math.random()<.4?BANNERS[Math.floor(Math.random()*BANNERS.length)]:null});else spawn('jet',0,{v:rnd(140,200)})}
+    if(m<1800)spawn('prop',d,{v:rnd(90,130),banner:Math.random()<.4?pickBanner():null});else spawn('jet',0,{v:rnd(140,200)})}
   // skydivers: freefall spread-eagle, then the canopy pops open and they drift down; sometimes a group jumps together
   if(fT.diver<0){fT.diver=rnd(40,90);
     if(m>=60&&m<4200){const d=Math.random()<.55?0:1,n=Math.random()<.3?2+Math.floor(Math.random()*3):1,x0=rnd(.45,.85)*W;
@@ -991,6 +1018,53 @@ function drawPebbles(dt){
     if(Math.random()<dt*2)dust([w,p.y],1,'rgba(255,255,255,.6)')}
   pebbles=pebbles.filter(p=>sy(p.y)<H+40);
 }
+/* ---------- custom signs on the cliff ---------- */
+const SLOT=40;  // metres between possible sign spots
+function decoPool(c){const D=S.deco||{},out=[];(D.all||[]).forEach(t=>out.push(t));((D.per||{})[c.id]||[]).forEach(t=>out.push(t));
+  const T=['{n} was here!','Go {n}!','{n} rocks!','{n} climbed here','Hi {n}!','{n} ★ summit crew'];((D.names||{})[c.id]||[]).forEach((n,i)=>out.push(T[(i*7+n.length)%T.length].replace('{n}',n)));
+  if(D.school)out.push('GO '+D.school.toUpperCase()+'!',D.school+' climbers',D.school+' ♥');return out.filter(t=>t&&t.trim())}
+function hs(c,n,k2){let v=7;for(const ch of c.id)v=(v*31+ch.charCodeAt(0))%9973;return hh(v*.137+n*7.31+k2*13.7)}
+let decoForce=null;
+function decoAt(c,n){
+  if(decoForce&&decoForce.n===n&&decoForce.id===c.id)return decoForce;
+  if(n<1)return null;const pool=decoPool(c);if(!pool.length)return null;const D=S.deco||{};
+  if(hs(c,n,1)>({rare:.35,normal:.6,lots:.9}[D.freq||'normal']))return null;
+  const st=D.style&&D.style!=='random'?D.style:['sign','banner','carved'][Math.floor(hs(c,n,3)*3)];
+  return{n,text:pool[Math.floor(hs(c,n,2)*pool.length)],style:st,y:HIP0+(n*SL0()+6+hs(c,n,4)*22)*U,col:PAL[Math.floor(hs(c,n,5)*PAL.length)]};
+}
+function SL0(){return SLOT}
+function wrapText(t,maxW){const words=String(t).split(/\s+/),lines=[];let cur='';for(const w of words){const tr=cur?cur+' '+w:w;if(g.measureText(tr).width>maxW&&cur){lines.push(cur);cur=w}else cur=tr}if(cur)lines.push(cur);return lines.slice(0,3)}
+function drawDeco(c){
+  const top=camY+H*.5/k+300,bot=camY-H*.5/k-300,wallW=EB/k;
+  for(let n=Math.max(1,Math.floor((bot-HIP0)/U/SLOT)-1);n<=Math.ceil((top-HIP0)/U/SLOT);n++){
+    const d=decoAt(c,n);if(!d)continue;const y=d.y,base=wallBase((y-HIP0)/U);
+    const w=Math.min(170,wallW-34),x1=ex(y)-14,x0=x1-w,cx=(x0+x1)/2;
+    const fs=Math.max(15,14.5*k);g.font=`700 ${fs}px Fredoka, sans-serif`;
+    const lines=wrapText(d.text,(w-20)*k),lh=fs*1.15/k,h=lines.length*lh+16,yt=y+h/2,yb=y-h/2;
+    const text=(col,dx=0,dy=0)=>{g.fillStyle=col;g.textAlign='center';g.textBaseline='middle';lines.forEach((l,i)=>{const p=S2([cx,yt-8-lh*(i+.5)]);g.fillText(l,p[0]+dx,p[1]+dy)})};
+    if(d.style==='carved'){
+      const pts=[];for(let i=0;i<14;i++){const a=i/14*Math.PI*2,rx=w/2+3+hh(n*3+i)*6,ry=h/2+3+hh(n*5+i)*5;pts.push([cx+Math.cos(a)*rx,y+Math.sin(a)*ry])}
+      polyW(pts,css(base,-.32));polyW(pts.map(([px,py])=>[cx+(px-cx)*.93,y+(py-y)*.9]),css(base,-.2));
+      polyW([[x0+6,yt-2],[x1-6,yt-2],[x1-10,yt-6],[x0+10,yt-6]],css(base,-.4));
+      text('rgba(255,255,255,.5)',0,2);text('#1e1712');
+    }else if(d.style==='banner'){
+      const sway=Math.sin(time*1.6+n)*3, sag=6, C=d.col;
+      const tl=[x0,yt],tr=[x1,yt],br=[x1,yb+sway*.4],bl=[x0,yb-sway*.4];
+      polyW([tl,[cx,yt-sag],tr,br,[cx,yb-sag+sway],bl],C);
+      polyW([[x0,yt],[cx,yt-sag],[x1,yt],[x1,yt-5],[cx,yt-sag-5],[x0,yt-5]],css(C,-.25));
+      for(let i=0;i<8;i++){const fx=x0+(i+.5)*w/8,fy=lerp(yb,yb-sag,1-Math.abs(i-3.5)/3.5)+sway*(i/8-.5)*.8;polyW([[fx-w/16,fy],[fx+w/16,fy],[fx,fy-9]],css(C,-.12))}
+      [[x0+4,yt-3],[x1-4,yt-3]].forEach(pp=>{const q=S2(pp);hexS(q[0],q[1],3.4*k,'#c9ced8');hexS(q[0],q[1],1.6*k,'#5d6577')});
+      text('#fff');
+    }else{
+      const post=[cx,yb-46];
+      seg([cx,yb+4],post,5,5,'#7a5230','#5f3f22');polyW([[cx-16,post[1]+2],[cx+16,post[1]+2],[cx+10,post[1]-8],[cx-12,post[1]-7]],css(base,-.15));
+      polyW([[x0,yt],[x1,yt+2],[x1+2,yb],[x0-2,yb-1]],'#a0723f');polyW([[x0,yb+5],[x1+1,yb+6],[x1+2,yb],[x0-2,yb-1]],'#7f5730');
+      g.strokeStyle='rgba(90,56,26,.35)';g.lineWidth=1.2*k;for(let i=1;i<3;i++){const a=S2([x0+4,yt-i*h/3]),b2=S2([x1-4,yt-i*h/3+1]);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b2[0],b2[1]);g.stroke()}
+      [[x0+6,yt-6],[x1-6,yt-6]].forEach(pp=>{const q=S2(pp);hexS(q[0],q[1],2.6*k,'#3b3530')});
+      text('#3a2412');
+    }
+  }
+}
 function drawMist(front){
   const top=camY+H*.5/k+400, bot=camY-H*.5/k-400;
   for(const st of STRATA){if(!st[0])continue;const y=HIP0+st[0]*U;if(y<bot||y>top)continue;
@@ -1201,7 +1275,7 @@ function frame(){
   const P=fromPose&&blend<1?lerpPose(fromPose,tp,ease(blend)):tp; lastPose=P;
   const m=Math.max(0,(dispY-HIP0)/U), G=gearState(c);
   if(W>0){
-    drawSky(m);drawClouds(false);drawBirds(dt,m);drawFlyers(dt,m,1);drawWall(m);drawMist(false);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
+    drawSky(m);drawClouds(false);drawBirds(dt,m);drawFlyers(dt,m,1);drawWall(m);drawMist(false);drawLedges(c,wallBase(m));drawDeco(c);drawGround();drawRivals(c);
     if(G.rope>0||c.alt>0)drawRope(P,c);
     plantFX(P,m);
     drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawLost(dt,P);drawClouds(true);drawFlyers(dt,m,2);drawMist(true);drawPebbles(dt);drawConfetti(dt);drawSnow(dt,m);
@@ -1316,10 +1390,11 @@ $('#devPanel').addEventListener('click',e=>{
   else if(k2.startsWith('fall')){const t=+k2.slice(4);if(t===3&&!FINDS.some(f=>c.finds[f.id]>0)){const f=FINDS[0];c.finds[f.id]=1;renderFinds()}if(c.alt<t*ANCHOR+1)devJump(t*ANCHOR+5);const keep=S.falls;S.falls='tough';doFall(c,t);S.falls=keep}
   else if(k2==='diver'){const x0=rnd(.5,.8)*W;for(let i=0;i<3;i++)spawn('diver',1,{v:0,x:x0+i*36,y:-30-i*18,vx:-10,open:H*.3+i*22,t:0,c2:PAL[(i+3)%PAL.length]})}
   else if(k2==='silly'){const [em,md]=SILLY[Math.floor(Math.random()*SILLY.length)];spawn('silly',1,{v:65,e:em,mode:md,s:1.3,y:H*.35})}
-  else if(k2==='plane')spawn('prop',1,{v:110,banner:BANNERS[Math.floor(Math.random()*BANNERS.length)],y:H*.22})
+  else if(k2==='plane')spawn('prop',1,{v:110,banner:pickBanner(),y:H*.22})
   else if(k2==='geese'){const y=H*.18;for(let i=0;i<7;i++){const o=i%2?1:-1,r=Math.ceil(i/2);spawn('goose',1,{v:70,x:W+60+r*26,y:y+o*r*14,p:i})}}
   else if(k2==='eagle')spawn('eagle',2,{v:55,y:H*.3})
   else if(k2==='pebbles')pebT=0;
+  else if(k2==='sign'){const pool=decoPool(c),n=Math.floor((c.alt-.4)/SLOT),st=['sign','banner','carved'][Math.floor(Math.random()*3)];decoForce={id:c.id,n,text:pool.length?pool[Math.floor(Math.random()*pool.length)]:(S.deco&&S.deco.school?'GO '+S.deco.school.toUpperCase()+'!':'Add messages in Customize the mountain'),style:st,y:HIP0+(c.alt-.4)*U,col:PAL[Math.floor(Math.random()*PAL.length)]}}
 });
 function switchClass(id){shownPts=null;stop();S.active=id;sessT=sessQ=0;nextFind=rnd(150,360);const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;renderAll();save()}
 $('#classSel').onchange=e=>switchClass(e.target.value);
@@ -1406,13 +1481,28 @@ twoStep($('#wipeBtn'),'Erase everything',()=>{stop();S=fresh();geared.clear();se
 $('#practiceBtn').onclick=()=>{S.teacher=$('#tName').value.trim();setPractice(!practice);$('#setup').classList.remove('show')};
 $('#doneBtn').onclick=()=>{S.teacher=$('#tName').value.trim();$('#setup').classList.remove('show');renderAll();save()};
 $('#setBtn').onclick=openSet;
+function openCust(){const D=S.deco=S.deco||{};$('#cSchool').value=D.school||'';
+  $('#cStyle').innerHTML=[['random','Mix of all'],['sign','Wooden signs'],['banner','Nailed banners'],['carved','Carved in rock']].map(([key,n])=>`<button data-st="${key}" class="${(D.style||'random')===key?'on':''}">${n}</button>`).join('');
+  $('#cFreq').innerHTML=[['rare','Now and then'],['normal','Often'],['lots','Lots']].map(([key,n])=>`<button data-fq="${key}" class="${(D.freq||'normal')===key?'on':''}">${n}</button>`).join('');
+  $('#cAll').value=(D.all||[]).join('\n');$('#cClass').innerHTML=S.classes.map(c=>`<option value="${c.id}"${c.id===S.active?' selected':''}>${esc(c.name)}</option>`).join('');custClass();
+  $('#setup').classList.remove('show');$('#cust').classList.add('show')}
+function custClass(){const D=S.deco,id=$('#cClass').value;$('#cPer').value=((D.per||{})[id]||[]).join('\n');$('#cNames').value=((D.names||{})[id]||[]).join('\n')}
+const lines=v=>v.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,200);
+function custSave(){const D=S.deco=S.deco||{};D.school=$('#cSchool').value.trim().slice(0,40);D.all=lines($('#cAll').value);const id=$('#cClass').value;D.per=D.per||{};D.names=D.names||{};D.per[id]=lines($('#cPer').value);D.names[id]=lines($('#cNames').value);save()}
+['cSchool','cAll','cPer','cNames'].forEach(id=>$('#'+id).addEventListener('input',custSave));
+$('#cClass').onchange=custClass;
+$('#cStyle').onclick=e=>{const key=e.target.closest('button')?.dataset.st;if(key){S.deco.style=key;openCustSeg()}};
+$('#cFreq').onclick=e=>{const key=e.target.closest('button')?.dataset.fq;if(key){S.deco.freq=key;openCustSeg()}};
+function openCustSeg(){save();document.querySelectorAll('#cStyle button').forEach(b=>b.classList.toggle('on',b.dataset.st===(S.deco.style||'random')));document.querySelectorAll('#cFreq button').forEach(b=>b.classList.toggle('on',b.dataset.fq===(S.deco.freq||'normal')))}
+$('#custBtn').onclick=()=>{S.teacher=$('#tName').value.trim();renderTitle();openCust()};
+$('#custClose').onclick=()=>{custSave();$('#cust').classList.remove('show')};
 $('#histBtn').onclick=()=>{$('#histList').innerHTML=CHANGELOG.map((e,i)=>`<div class="hv${i?'':' now'}"><h5>${e.v}<small>${e.d}</small></h5><ul>${e.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`).join('');$('#hist').classList.add('show')};
 $('#verTag').textContent=CHANGELOG[0].v;$('#verTag').onclick=()=>$('#histBtn').click();
 $('#histClose').onclick=()=>$('#hist').classList.remove('show');
 $('#exportBtn').onclick=()=>{try{save();const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='quiet-climb-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();$('#bakMsg').textContent='Backup saved to your downloads.'}catch(e){$('#bakMsg').textContent="This copy can't save files. Use the GitHub link or the downloaded file."}};
 $('#importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const s2=parseSave(await f.text());if(!s2){$('#bakMsg').textContent="That file isn't a Quiet Climb backup.";return}
   stop();S=upgrade(s2);geared.clear();for(const key in rolls)delete rolls[key];const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;save();openSet();renderAll();$('#bakMsg').textContent='Backup loaded.';e.target.value=''};
-addEventListener('keydown',e=>{if(e.key==='Escape'){$('#hist').classList.remove('show');$('#setup').classList.remove('show');$('#cele').classList.remove('show')}});
+addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#cust').classList.contains('show'))custSave();$('#cust').classList.remove('show');$('#hist').classList.remove('show');$('#setup').classList.remove('show');$('#cele').classList.remove('show')}});
 addEventListener('beforeunload',save);
 document.addEventListener('visibilitychange',save);
 
@@ -1424,7 +1514,7 @@ requestAnimationFrame(frame);
 if(!S.teacher)openSet();
 {let blocked=!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);try{if(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))blocked=true}catch(e){}
  if(blocked){$('#micMsg span').textContent=micHelp()+" Or try practice mode and hold Space to make noise.";$('#micRetry').style.display='none';$('#micMsg').classList.add('show')}}
-if(location.hash==='#debug')window.QC={pts:()=>{const c=cur();return [points(c),Math.floor(c.alt*FT),Math.floor(c.alt/ANCHOR+1e-9),quietPct(c),c.pen||0,c.quiet,c.total,mode]},bt:id=>bannerText(ACHIEVEMENTS.find(x=>x.id===id)),allBt:()=>ACHIEVEMENTS.map(bannerText),spawn:(kind,d,o)=>spawn(kind,d,o||{}),next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{const c=cur();c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
+if(location.hash==='#debug')window.QC={deco:n=>{const c=cur();return [decoPool(c),decoAt(c,n),camY,HIP0,U,SLOT]},pts:()=>{const c=cur();return [points(c),Math.floor(c.alt*FT),Math.floor(c.alt/ANCHOR+1e-9),quietPct(c),c.pen||0,c.quiet,c.total,mode]},bt:id=>bannerText(ACHIEVEMENTS.find(x=>x.id===id)),allBt:()=>ACHIEVEMENTS.map(bannerText),spawn:(kind,d,o)=>spawn(kind,d,o||{}),next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{const c=cur();c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
 }
 </script>
 </body>
