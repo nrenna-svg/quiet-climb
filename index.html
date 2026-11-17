@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.25">
+<meta name="version" content="v.26">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -46,7 +46,14 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .pdelta.show{animation:pd 2s ease-out forwards}
 .pts.losing{background:rgba(176,30,30,.85);animation:shake .35s linear infinite}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.rival{display:none;align-items:center;gap:8px;margin-top:8px;padding:6px 14px 6px 10px;border-radius:14px;background:rgba(28,37,54,.6);color:#fff;font:600 clamp(15px,1.4vw,19px) Fredoka,sans-serif;text-shadow:none;width:max-content;max-width:100%}
+.rival.show{display:flex}
+.rival b{font:700 clamp(20px,2vw,28px)/1 Fredoka,sans-serif;color:#ffd23f}
+.rival.near{background:#e9890f;animation:pulse 1.6s infinite}
+.rival.warn{background:#7b5cd6}
+.rival .sw{width:14px;height:14px;border-radius:4px;flex:none}
 .drain{display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 14px 6px 10px;border-radius:14px;background:#c62828;color:#fff;font:600 clamp(15px,1.4vw,19px) Fredoka,sans-serif;text-shadow:none;width:max-content;max-width:100%;opacity:0;transform:translateY(-6px) scale(.95);transition:opacity .3s,transform .3s}
+.drain:not(.show){display:none}
 .drain.show{opacity:1;transform:none}
 .drain b{font:700 clamp(24px,2.4vw,34px)/1 Fredoka,sans-serif}
 .drain .darr{font-size:1.3em;animation:pulse 1s infinite}
@@ -134,6 +141,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
 @media(max-width:600px){.devgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .foot{display:flex;justify-content:flex-end;margin-top:20px;gap:8px;position:sticky;bottom:-24px;background:#fff;padding:12px 0}
 .cele{text-align:center}
+.celelist{list-style:none;margin:0 auto 18px;padding:0;max-width:420px;text-align:left;display:grid;gap:6px}.celelist li{display:grid;grid-template-columns:32px 16px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px;border-radius:12px;background:#f1f5fb;font-weight:800}.celelist li:first-child{background:#fff6d6;outline:2px solid #e9b949}.celelist .rk{font:700 20px Fredoka,sans-serif;text-align:center}
 .cele .big{font:700 clamp(30px,4vw,46px)/1.1 Fredoka,sans-serif;margin:8px 0}
 @media(max-width:900px){.app{height:auto}.stage{grid-template-columns:minmax(0,1fr)}.scene{min-height:70vw}aside{overflow:visible}}
 @media(max-width:600px){header,.stage{padding-inline:10px}.finds{grid-template-columns:repeat(5,minmax(0,1fr))}.toast .em{font-size:38px}.toast b{font-size:19px}.scene{min-height:110vw}}
@@ -146,7 +154,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.25</span>
+      <span class="ver" title="Quiet Climb version">v.26</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -156,7 +164,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <section class="scene" id="scene">
       <canvas id="game" aria-label="The class climber on the cliff"></canvas>
       <div class="fog" id="fog"></div>
-      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div><div class="drain" id="drain"><span class="darr">▼</span><b id="drainV">0</b><span id="drainT">points lost, too loud!</span></div></div>
+      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div><div class="drain" id="drain"><span class="darr">▼</span><b id="drainV">0</b><span id="drainT">points lost, too loud!</span></div><div class="rival" id="rival"></div></div>
       <div class="status" id="status"><span class="dot"></span><span id="stText">Press Start to gear up</span></div>
       <div class="pbadge">Practice mode — progress isn't saved</div>
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
@@ -170,7 +178,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
         <button class="btn noise" id="noiseBtn">Hold to make noise (Space · louder: 2, 3)</button>
         <div class="times"><span>This session <b id="sessT">0:00</b></span><span>Quiet <b id="sessQ">0:00</b></span></div>
       </div>
-      <div class="card"><h2>Who's highest this week</h2><ol id="board"></ol></div>
+      <div class="card" id="boardCard"><h2>Who's highest this week</h2><ol id="board"></ol></div>
       <div class="card"><h2 id="findsH">Trophy case</h2><div class="tally" id="tally"></div><div class="finds" id="finds"></div></div>
     </aside>
   </main>
@@ -198,6 +206,9 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <input type="range" class="rng" id="custom" min="10" max="90" step="1" aria-label="Custom volume goal">
     <p class="hint">Short noises like a cough or a dropped pencil are ignored. The climber only reacts when the noise lasts.</p>
 
+    <h4>Leaderboard</h4>
+    <div class="seg" id="lbSeg"></div>
+    <p class="hint">Hidden: classes don't see each other's heights or points. A chip under the points only reveals the class just above once they're within about 100 ft (30 m), or warns them when a class is close behind. The winner is still revealed when you end the week. Shown: the full leaderboard stays on screen.</p>
     <h4>Height shown in</h4>
     <div class="seg" id="unitSeg"></div>
     <p class="hint">Only changes how heights are shown. Progress is the same either way. The height-fact banners switch too.</p>
@@ -244,7 +255,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
   <div class="sheet cele">
     <div style="font-size:72px">🏆</div>
     <div class="big" id="celeT"></div>
-    <p class="lead" id="celeS"></p>
+    <p class="lead" id="celeS"></p><ol id="celeList" class="celelist"></ol>
     <button class="btn primary go" id="celeOk" style="max-width:280px">Hooray!</button>
   </div>
 </div>
@@ -286,7 +297,7 @@ let lastPose=null, fromPose=null, blend=1, poseMode='', mtV=0, vMode='', grab=nu
 let W=0, H=0, k=1, EB=0, time=0, birds=[], birdT=4;
 const flakes = Array.from({length:160},()=>({x:Math.random(),y:Math.random(),r:rnd(1,3),s:rnd(.6,1.4)}));
 
-function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:'',falls:'tough',units:'ft'}}
+function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:'',falls:'tough',units:'ft',board:'hidden'}}
 function mk(name,i){return{id:'c'+Math.random().toString(36).slice(2,9),name,color:PAL[i%PAL.length],alt:0,best:0,quiet:0,total:0,finds:{},wins:0,zone:0,got:{}}}
 // Progress is kept in this browser's local storage under one fixed name that never changes between versions.
 // Every save first copies the previous save aside, so a bad write can always be rolled back.
@@ -295,6 +306,7 @@ function upgrade(s){
   if(!PACE[s.pace])s.pace='normal';
   if(!s.falls)s.falls='tough';
   if(!s.units)s.units='ft';
+  if(!s.board)s.board='hidden';
   s.classes.forEach(c=>{c.alt=+c.alt||0;c.got=c.got||{};c.finds=c.finds||{};c.wins=c.wins||0;if(!c.ach){c.ach={};for(const a of ACHIEVEMENTS)if(c.alt>=a.m)c.ach[a.id]=1}});
   return s;
 }
@@ -949,7 +961,7 @@ function drawRivals(c){
     g.strokeStyle='#3a3f4b';g.lineWidth=3*k;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]+42*k,p[1]-20*k);g.stroke();
     polyS([[p[0]+42*k,p[1]-20*k],[p[0]+80*k,p[1]-14*k],[p[0]+44*k,p[1]-2*k]],o.color);
     g.font=`700 ${Math.max(13,11*k)}px Nunito, sans-serif`;g.textAlign='left';g.textBaseline='middle';g.lineWidth=4;g.strokeStyle='rgba(255,255,255,.95)';
-    g.strokeText(o.name,p[0]+86*k,p[1]-12*k);g.fillStyle='#1c2536';g.fillText(o.name,p[0]+86*k,p[1]-12*k);
+    const nm=S.board==='shown'||Math.abs(o.alt-c.alt)<=NEAR?o.name:'???';g.strokeText(nm,p[0]+86*k,p[1]-12*k);g.fillStyle='#1c2536';g.fillText(nm,p[0]+86*k,p[1]-12*k);
   }
 }
 function drawMap(c){
@@ -1203,7 +1215,23 @@ function gearBubble(c){
 }
 
 /* ---------- panels ---------- */
+// the "next to beat" chip: the class just above is only named once they're close
+const NEAR=30.48, BEHIND=15.24;  // 100 ft to reveal the class ahead, 50 ft to warn about the class behind
+function renderRival(){
+  const c=cur(), others=S.classes.filter(o=>o!==c&&o.alt>0), e=$('#rival');
+  if(!others.length||(c.alt<=0&&!running)){e.className='rival';return}
+  const above=others.filter(o=>o.alt>c.alt).sort((a,b)=>a.alt-b.alt)[0], below=others.filter(o=>o.alt<=c.alt).sort((a,b)=>b.alt-a.alt)[0];
+  let html='',cls='rival show';
+  if(above){const gap=above.alt-c.alt;
+    if(gap<=NEAR){html=`<span class="sw" style="background:${above.color}"></span>▲ <b>${H_(gap,'ceil')}</b> to pass ${esc(above.name)}!`;cls+=' near'}
+    else html=`▲ Another class is higher up the mountain… get within ${H_(NEAR)} to see who!`}
+  else if(below&&c.alt-below.alt<=BEHIND){html=`<span class="sw" style="background:${below.color}"></span>⚠ ${esc(below.name)} is only <b>${H_(c.alt-below.alt,'ceil')}</b> behind you!`;cls+=' warn'}
+  else html='★ <b>You\'re in the lead!</b> No class is higher this week.';
+  e.className=cls;if(e.innerHTML!==html)e.innerHTML=html;
+}
 function renderBoard(){
+  renderRival();
+  $('#boardCard').hidden=S.board!=='shown';
   const a=cur(), list=[...S.classes].sort((x,y)=>y.alt-x.alt);
   $('#board').innerHTML=list.map((c,i)=>{
     const pct=c.alt>0||c.total>30?'★ '+points(c).toLocaleString()+' pts'+(c.total>30?' · '+quietPct(c)+'% quiet':''):'Not started';
@@ -1301,7 +1329,7 @@ $('#celeOk').onclick=()=>$('#cele').classList.remove('show');
 
 /* ---------- settings ---------- */
 function openSet(){
-  $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();drawFalls();drawUnits();$('#custom').value=S.custom;preview();
+  $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();drawFalls();drawUnits();drawBoardOpt();$('#custom').value=S.custom;preview();
   $('#calMsg').textContent=S.cal?`Calibrated (quiet ≈ ${Math.round(S.cal.base)}, talking ≈ ${Math.round(S.cal.talk)})`:'Not calibrated yet';
   if(an)listMics();
   if(!S.cal&&an)$('#calMsg').textContent='Microphone is on. Press Calibrate when the room is ready.';
@@ -1327,6 +1355,8 @@ $('#goalSeg').onclick=e=>{const key=e.target.dataset.g;if(!key)return;if(key==='
 $('#custom').oninput=e=>{S.custom=+e.target.value;renderGoal()};
 function drawFalls(){$('#fallSeg').innerHTML=[['tough','Tough'],['gentle','Gentle']].map(([key,n])=>`<button data-f="${key}" class="${(S.falls||'tough')===key?'on':''}">${n}</button>`).join('')}
 $('#fallSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.f;if(key){S.falls=key;drawFalls();renderGoal();save()}};
+function drawBoardOpt(){$('#lbSeg').innerHTML=[['hidden','Hidden (surprise)'],['shown','Shown']].map(([key,n])=>`<button data-lb="${key}" class="${(S.board||'hidden')===key?'on':''}">${n}</button>`).join('')}
+$('#lbSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.lb;if(key){S.board=key;drawBoardOpt();renderBoard();save()}};
 function drawUnits(){$('#unitSeg').innerHTML=[['ft','Feet'],['m','Metres']].map(([key,n])=>`<button data-u="${key}" class="${U_()===key?'on':''}">${n}</button>`).join('')}
 $('#unitSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.u;if(key){S.units=key;drawUnits();drawPace();renderAll();save()}};
 function drawPace(){$('#paceSeg').innerHTML=Object.entries(PACE).map(([key,[n,v]])=>`<button data-p="${key}" class="${S.pace===key?'on':''}">${n} · ${S.units==='m'?v+' m':Math.round(v*FT)+' ft'}/min</button>`).join('')}
@@ -1350,7 +1380,8 @@ function calibStep(dt){
 }
 function twoStep(btn,label,fn){btn.onclick=()=>{if(btn.dataset.arm){fn();btn.textContent=label;delete btn.dataset.arm}else{btn.dataset.arm=1;btn.textContent='Click again to confirm';setTimeout(()=>{delete btn.dataset.arm;btn.textContent=label},4000)}}}
 twoStep($('#weekBtn'),'End the week and crown a winner',()=>{
-  stop();const top=[...S.classes].sort((x,y)=>y.alt-x.alt)[0];
+  stop();const ranked=[...S.classes].sort((x,y)=>y.alt-x.alt),top=ranked[0];
+  $('#celeList').innerHTML=ranked.map((c,i)=>`<li><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="sw" style="background:${c.color}"></span><span>${esc(c.name)}<br><small style="color:var(--soft)">★ ${points(c).toLocaleString()} pts</small></span><span>${H_(c.alt)}</span></li>`).join('');
   if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${H_(top.alt)}. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
   S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};c.pen=0;delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
 });
