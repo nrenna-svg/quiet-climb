@@ -47,6 +47,11 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--calm);border-radius:999px;transition:background .6s}
 .over .fill{background:var(--storm)}
 .goal{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px}
+.banner{position:absolute;left:50%;top:16px;transform:translate(-50%,-30px) scale(.9);opacity:0;transition:opacity .5s,transform .6s cubic-bezier(.2,1.4,.4,1);display:flex;align-items:center;gap:18px;padding:16px 26px 16px 18px;border-radius:18px;background:linear-gradient(#fff6d8,#ffe9a8);border:3px solid #e9b949;box-shadow:0 14px 34px rgba(0,0,0,.25);z-index:6;width:min(640px,calc(100% - 40px));pointer-events:none}
+.banner.show{opacity:1;transform:translate(-50%,0) scale(1)}
+.banner .bm{flex:none;min-width:96px;padding:8px 12px;border-radius:14px;background:#1c2536;color:#ffd23f;font:700 clamp(26px,3vw,40px)/1 Fredoka,sans-serif;text-align:center}
+.banner b{display:block;font:700 clamp(19px,1.9vw,26px)/1.2 Fredoka,sans-serif;text-wrap:balance}
+.banner .bx span{display:block;font-weight:700;font-size:clamp(15px,1.4vw,18px);color:#4a3d1a;margin-top:4px}
 .toast{position:absolute;left:50%;top:16px;transform:translate(-50%,-170%);transition:transform .6s cubic-bezier(.2,1.4,.4,1);display:flex;align-items:center;gap:16px;padding:14px 22px 14px 16px;border-radius:20px;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,.2);z-index:5;max-width:min(520px,calc(100% - 40px))}
 .toast.show{transform:translate(-50%,0)}
 .toast .em{font-size:50px;line-height:1}
@@ -129,6 +134,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
       <div class="hud"><div class="altn"><b id="altV">0</b><span>m</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div></div>
       <div class="status" id="status"><span class="dot"></span><span id="stText">Press Start to gear up</span></div>
       <div class="pbadge">Practice mode — progress isn't saved</div>
+      <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
       <div class="toast" id="toast"><span class="em" id="tEm"></span><span><small id="tR"></small><b id="tN"></b><small id="tW"></small></span></div>
       <div class="mustard" id="micMsg"><span>The microphone isn't available. Allow mic access in the browser's address bar, or try practice mode.</span><button class="btn" id="micPractice">Try practice mode</button></div>
       <div class="meter" id="meter"><span>Voice level</span><div class="bar"><div class="fill" id="fill"></div><div class="goal" id="goalMark"></div></div><span id="goalName"></span></div>
@@ -214,6 +220,8 @@ const ZONES = [[0,'Base camp','🏕️'],[15,'The lower cliffs','🧗'],[60,'Bir
 const GOALS = {silent:'Silent',independent:'Independent',partner:'Partner work',custom:'Custom'};
 const PACE = {slow:['Slow',3],normal:['Normal',5],brisk:['Brisk',8]};
 const U = 100, ANCHOR = 10, HIP0 = 88, CYC = 60, IB = 800;
+// 100 real-world height comparisons (from quiet-climb-height-achievements.json): awarded the first time a class climbs past triggerM each week.
+const ACHIEVEMENTS = [{"id": "denos-wonder-wheel", "m": 50, "title": "Deno’s Wonder Wheel", "loc": "Coney Island, New York City", "text": "You’ve climbed higher than Coney Island’s 150-foot Wonder Wheel!"}, {"id": "horseshoe-falls", "m": 60, "title": "Horseshoe Falls", "loc": "Niagara Falls, Canada–U.S. border", "text": "You’ve climbed farther up than Horseshoe Falls drops down!"}, {"id": "notre-dames-bell-towers", "m": 75, "title": "Notre-Dame’s bell towers", "loc": "Paris, France", "text": "You’re above the height of Notre-Dame’s two front towers!"}, {"id": "iguazu-falls", "m": 80, "title": "Iguazú Falls", "loc": "Argentina–Brazil border", "text": "Your climb is about as long as the drop at Iguazú Falls!"}, {"id": "flatiron-building", "m": 90, "title": "Flatiron Building", "loc": "New York City", "text": "You’ve topped Manhattan’s wedge-shaped Flatiron Building!"}, {"id": "statue-of-liberty", "m": 95, "title": "Statue of Liberty", "loc": "New York Harbor", "text": "You’re higher than Lady Liberty’s torch, counting her pedestal too!"}, {"id": "big-bens-tower", "m": 100, "title": "Big Ben’s tower", "loc": "London, UK", "text": "You’ve climbed higher than the tower that holds the Big Ben bell!"}, {"id": "britton-hill", "m": 110, "title": "Britton Hill", "loc": "Florida, USA", "text": "Your climb has topped the elevation of Florida’s highest point!"}, {"id": "victoria-falls", "m": 115, "title": "Victoria Falls", "loc": "Zambia–Zimbabwe border", "text": "Your climb is longer than Victoria Falls’ deepest drop!"}, {"id": "jaynes-hill", "m": 125, "title": "Jayne’s Hill", "loc": "Long Island, New York", "text": "Your climb has matched the elevation of Jayne’s Hill on Long Island!"}, {"id": "todt-hill", "m": 130, "title": "Todt Hill", "loc": "Staten Island, New York City", "text": "You’ve matched the elevation of New York City’s highest point!"}, {"id": "skytower-bucharest", "m": 140, "title": "SkyTower Bucharest", "loc": "Bucharest, Romania", "text": "You’ve reached the height of SkyTower Bucharest (137 m)."}, {"id": "great-pyramid-of-giza", "m": 150, "title": "Great Pyramid of Giza", "loc": "Giza, Egypt", "text": "You’ve topped the Great Pyramid’s height when it was first built!"}, {"id": "skylon-tower", "m": 160, "title": "Skylon Tower", "loc": "Niagara Falls, Canada", "text": "You’ve reached the height of the Skylon Tower overlooking Niagara Falls."}, {"id": "montreal-tower", "m": 165, "title": "Montréal Tower", "loc": "Montréal, Canada", "text": "You’ve reached the height of Montréal Tower (165 m)."}, {"id": "washington-monument", "m": 170, "title": "Washington Monument", "loc": "Washington, D.C.", "text": "You’ve reached the height of the Washington Monument (169 m)."}, {"id": "san-jacinto-monument", "m": 175, "title": "San Jacinto Monument", "loc": "La Porte, Texas", "text": "You’ve reached the height of the San Jacinto Monument (174 m)."}, {"id": "space-needle", "m": 185, "title": "Space Needle", "loc": "Seattle, Washington", "text": "You’ve reached the height of the Space Needle (184 m)."}, {"id": "bridalveil-fall", "m": 190, "title": "Bridalveil Fall", "loc": "Yosemite National Park, California", "text": "Your climb has matched the roughly 189 m drop at Bridalveil Fall."}, {"id": "gateway-arch", "m": 200, "title": "Gateway Arch", "loc": "St. Louis, Missouri", "text": "You’ve climbed higher than the Gateway Arch. It’s also 630 feet wide at its base!"}, {"id": "montparnasse-tower", "m": 210, "title": "Montparnasse Tower", "loc": "Paris, France", "text": "You’ve reached the height of Montparnasse Tower (210 m)."}, {"id": "zizkov-television-tower", "m": 220, "title": "Žižkov Television Tower", "loc": "Prague, Czechia", "text": "You’ve reached the height of Žižkov Television Tower (216 m)."}, {"id": "kaieteur-falls", "m": 230, "title": "Kaieteur Falls", "loc": "Guyana", "text": "Your climb has matched the roughly 226 m drop at Kaieteur Falls."}, {"id": "n-seoul-tower", "m": 240, "title": "N Seoul Tower", "loc": "Seoul, South Korea", "text": "You’ve reached the height of N Seoul Tower (238 m)."}, {"id": "woolworth-building", "m": 245, "title": "Woolworth Building", "loc": "New York City", "text": "You’ve reached the height of the Woolworth Building (241 m)."}, {"id": "danube-tower", "m": 255, "title": "Danube Tower", "loc": "Vienna, Austria", "text": "You’ve reached the height of Danube Tower (252 m)."}, {"id": "top-of-the-rock", "m": 260, "title": "Top of the Rock", "loc": "New York City", "text": "You’ve reached the height of the 70th-floor lookout at Rockefeller Center!"}, {"id": "devils-tower", "m": 265, "title": "Devils Tower", "loc": "Wyoming, USA", "text": "You’ve climbed about as high as Devils Tower rises above its base (264 m)."}, {"id": "torre-de-collserola", "m": 290, "title": "Torre de Collserola", "loc": "Barcelona, Spain", "text": "You’ve reached the height of Torre de Collserola (288 m)."}, {"id": "eureka-tower", "m": 300, "title": "Eureka Tower", "loc": "Melbourne, Australia", "text": "You’ve reached the height of Eureka Tower (297 m)."}, {"id": "the-shard", "m": 310, "title": "The Shard", "loc": "London, UK", "text": "You’ve reached the height of the Shard (309 m)."}, {"id": "chrysler-building", "m": 320, "title": "Chrysler Building", "loc": "New York City", "text": "You’ve reached the architectural height of the Chrysler Building (319 m)."}, {"id": "eiffel-tower", "m": 330, "title": "Eiffel Tower", "loc": "Paris, France", "text": "Your class has reached the height of the Eiffel Tower, antenna and all!"}, {"id": "macau-tower", "m": 340, "title": "Macau Tower", "loc": "Macao, China", "text": "You’ve reached the height of Macau Tower (338 m)."}, {"id": "qingdao-tv-tower", "m": 350, "title": "Qingdao TV Tower", "loc": "Qingdao, China", "text": "You’ve reached the height of Qingdao TV Tower (348 m)."}, {"id": "berlin-tv-tower", "m": 370, "title": "Berlin TV Tower", "loc": "Berlin, Germany", "text": "You’ve reached the height of Berlin TV Tower (368 m)."}, {"id": "empire-state-building", "m": 385, "title": "Empire State Building", "loc": "New York City", "text": "You’ve passed the Empire State Building’s 1,250-foot architectural height!"}, {"id": "beijing-central-radio-and-tv-tower", "m": 405, "title": "Beijing Central Radio and TV Tower", "loc": "Beijing, China", "text": "You’ve reached the height of Beijing Central Radio and TV Tower (405 m)."}, {"id": "kuala-lumpur-tower", "m": 425, "title": "Kuala Lumpur Tower", "loc": "Kuala Lumpur, Malaysia", "text": "You’ve reached the height of Kuala Lumpur Tower (421 m)."}, {"id": "wapama-falls", "m": 430, "title": "Wapama Falls", "loc": "Yosemite National Park, California", "text": "Your climb has matched the roughly 427 m drop at Wapama Falls."}, {"id": "milad-tower", "m": 435, "title": "Milad Tower", "loc": "Tehran, Iran", "text": "You’ve reached the height of Milad Tower (435 m)."}, {"id": "willis-tower", "m": 445, "title": "Willis Tower", "loc": "Chicago, Illinois", "text": "You’ve reached the architectural height of Willis Tower (442 m)."}, {"id": "petronas-twin-towers", "m": 455, "title": "Petronas Twin Towers", "loc": "Kuala Lumpur, Malaysia", "text": "You’ve reached the architectural height of the Petronas Twin Towers (452 m)."}, {"id": "oriental-pearl-tower", "m": 470, "title": "Oriental Pearl Tower", "loc": "Shanghai, China", "text": "You’ve reached the height of Oriental Pearl Tower (468 m)."}, {"id": "central-park-tower", "m": 480, "title": "Central Park Tower", "loc": "New York City", "text": "You’ve reached the architectural height of Central Park Tower (472 m)."}, {"id": "ribbon-fall", "m": 500, "title": "Ribbon Fall", "loc": "Yosemite National Park, California", "text": "Your climb has matched the roughly 491 m drop at Ribbon Fall."}, {"id": "taipei-101", "m": 510, "title": "Taipei 101", "loc": "Taipei, Taiwan", "text": "You’ve reached the architectural height of Taipei 101 (508 m)."}, {"id": "citic-tower", "m": 530, "title": "CITIC Tower", "loc": "Beijing, China", "text": "You’ve reached the architectural height of CITIC Tower (528 m)."}, {"id": "one-world-trade-center", "m": 550, "title": "One World Trade Center", "loc": "New York City", "text": "You’ve cleared NYC’s One World Trade Center, all the way to its spire!"}, {"id": "cn-tower", "m": 560, "title": "CN Tower", "loc": "Toronto, Canada", "text": "You’ve climbed higher than the tip of Toronto’s CN Tower antenna!"}, {"id": "taum-sauk-mountain", "m": 580, "title": "Taum Sauk Mountain", "loc": "Missouri, USA", "text": "Your climb now matches the elevation of Taum Sauk Mountain’s summit, about 540 m above sea level."}, {"id": "canton-tower", "m": 600, "title": "Canton Tower", "loc": "Guangzhou, China", "text": "You’ve reached the height of Canton Tower (600 m)."}, {"id": "sentinel-falls", "m": 620, "title": "Sentinel Falls", "loc": "Yosemite National Park, California", "text": "Your climb has matched the roughly 610 m drop at Sentinel Falls."}, {"id": "tokyo-skytree", "m": 635, "title": "Tokyo Skytree", "loc": "Tokyo, Japan", "text": "You’ve passed the top of the 634-meter Tokyo Skytree!"}, {"id": "chilnualna-falls", "m": 675, "title": "Chilnualna Falls", "loc": "Yosemite National Park, California", "text": "Your climb has matched the roughly 671 m drop at Chilnualna Falls."}, {"id": "merdeka-118", "m": 680, "title": "Merdeka 118", "loc": "Kuala Lumpur, Malaysia", "text": "You’ve reached the architectural height of Merdeka 118 (679 m)."}, {"id": "eagle-mountain", "m": 705, "title": "Eagle Mountain", "loc": "Minnesota, USA", "text": "Your climb now matches the elevation of Eagle Mountain’s summit, about 701 m above sea level."}, {"id": "yosemite-falls", "m": 740, "title": "Yosemite Falls", "loc": "Yosemite National Park, California", "text": "You’ve climbed the full drop of Yosemite Falls, all three sections combined!"}, {"id": "burj-khalifa", "m": 830, "title": "Burj Khalifa", "loc": "Dubai, United Arab Emirates", "text": "You’ve climbed past Dubai’s 828-meter Burj Khalifa!"}, {"id": "mount-magazine", "m": 850, "title": "Mount Magazine", "loc": "Arkansas, USA", "text": "Your climb now matches the elevation of Mount Magazine’s summit, about 839 m above sea level."}, {"id": "el-capitans-granite-face", "m": 925, "title": "El Capitan’s granite face", "loc": "Yosemite National Park, California", "text": "You’ve climbed about the height of El Capitan’s granite wall."}, {"id": "angel-falls", "m": 980, "title": "Angel Falls", "loc": "Venezuela", "text": "You’ve climbed farther up than Angel Falls drops down!"}, {"id": "mount-davis", "m": 1000, "title": "Mount Davis", "loc": "Pennsylvania, USA", "text": "Your climb now matches the elevation of Mount Davis’s summit, about 979 m above sea level."}, {"id": "hoye-crest-on-backbone-mountain", "m": 1030, "title": "Hoye-Crest on Backbone Mountain", "loc": "Maryland, USA", "text": "Your climb now matches the elevation of Hoye-Crest on Backbone Mountain’s summit, about 1,024 m above sea level."}, {"id": "mount-greylock", "m": 1070, "title": "Mount Greylock", "loc": "Massachusetts, USA", "text": "Your climb now matches the elevation of Mount Greylock’s summit, about 1,064 m above sea level."}, {"id": "grand-canyon", "m": 1225, "title": "Grand Canyon", "loc": "Arizona, USA", "text": "You’ve climbed as far up as the Grand Canyon is deep on average!"}, {"id": "black-mountain", "m": 1270, "title": "Black Mountain", "loc": "Kentucky, USA", "text": "Your climb now matches the elevation of Black Mountain’s summit, about 1,262 m above sea level."}, {"id": "mount-mansfield", "m": 1340, "title": "Mount Mansfield", "loc": "Vermont, USA", "text": "Your climb now matches the elevation of Mount Mansfield’s summit, about 1,339 m above sea level."}, {"id": "ben-nevis", "m": 1350, "title": "Ben Nevis", "loc": "Scotland, UK", "text": "Your climb has matched the summit elevation of Britain’s highest mountain!"}, {"id": "brasstown-bald", "m": 1460, "title": "Brasstown Bald", "loc": "Georgia, USA", "text": "Your climb now matches the elevation of Brasstown Bald’s summit, about 1,458 m above sea level."}, {"id": "spruce-knob", "m": 1500, "title": "Spruce Knob", "loc": "West Virginia, USA", "text": "Your climb now matches the elevation of Spruce Knob’s summit, about 1,482 m above sea level."}, {"id": "katahdin", "m": 1610, "title": "Katahdin", "loc": "Maine, USA", "text": "Your climb now matches the elevation of Katahdin’s summit, about 1,605 m above sea level."}, {"id": "mount-marcy", "m": 1630, "title": "Mount Marcy", "loc": "Adirondacks, New York", "text": "Your climb has matched the summit elevation of New York State’s highest mountain!"}, {"id": "mount-rogers", "m": 1750, "title": "Mount Rogers", "loc": "Virginia, USA", "text": "Your climb now matches the elevation of Mount Rogers’s summit, about 1,746 m above sea level."}, {"id": "mount-washington", "m": 1920, "title": "Mount Washington", "loc": "New Hampshire, USA", "text": "Your climb now matches the elevation of Mount Washington’s summit, about 1,917 m above sea level."}, {"id": "mount-mitchell", "m": 2040, "title": "Mount Mitchell", "loc": "North Carolina, USA", "text": "Your climb now matches the elevation of Mount Mitchell’s summit, about 2,037 m above sea level."}, {"id": "mount-kosciuszko", "m": 2230, "title": "Mount Kosciuszko", "loc": "New South Wales, Australia", "text": "Your climb has matched the elevation of Australia’s highest summit!"}, {"id": "doi-inthanon", "m": 2570, "title": "Doi Inthanon", "loc": "Chiang Mai Province, Thailand", "text": "Your climb now matches the elevation of Doi Inthanon’s summit, about 2,565 m above sea level."}, {"id": "guadalupe-peak", "m": 2670, "title": "Guadalupe Peak", "loc": "Texas, USA", "text": "Your climb now matches the elevation of Guadalupe Peak’s summit, about 2,667 m above sea level."}, {"id": "mount-olympus", "m": 2920, "title": "Mount Olympus", "loc": "Greece", "text": "Your climb now matches the elevation of Mount Olympus’s summit, about 2,917 m above sea level."}, {"id": "haleakala", "m": 3060, "title": "Haleakalā", "loc": "Maui, Hawaiʻi", "text": "Your climb now matches the elevation of Haleakalā’s summit, about 3,055 m above sea level."}, {"id": "mount-hood", "m": 3430, "title": "Mount Hood", "loc": "Oregon, USA", "text": "Your climb now matches the elevation of Mount Hood’s summit, about 3,426 m above sea level."}, {"id": "aoraki-mount-cook", "m": 3730, "title": "Aoraki / Mount Cook", "loc": "South Island, New Zealand", "text": "Your climb has matched the summit elevation of New Zealand’s highest mountain!"}, {"id": "mount-fuji", "m": 3780, "title": "Mount Fuji", "loc": "Honshu, Japan", "text": "Your climb has matched the summit elevation of Japan’s Mount Fuji!"}, {"id": "mount-kinabalu", "m": 4100, "title": "Mount Kinabalu", "loc": "Sabah, Malaysia", "text": "Your climb now matches the elevation of Mount Kinabalu’s summit, about 4,095 m above sea level."}, {"id": "mauna-loa", "m": 4170, "title": "Mauna Loa", "loc": "Hawaiʻi Island, USA", "text": "You’ve matched the summit elevation of Mauna Loa, a giant active volcano!"}, {"id": "mount-rainier", "m": 4395, "title": "Mount Rainier", "loc": "Washington, USA", "text": "Your climb has matched the summit elevation of the highest peak in the Cascade Range!"}, {"id": "mount-vinson", "m": 4895, "title": "Mount Vinson", "loc": "Antarctica", "text": "Your climb now matches the elevation of Mount Vinson’s summit, about 4,892 m above sea level."}, {"id": "mount-kenya", "m": 5200, "title": "Mount Kenya", "loc": "Kenya", "text": "Your climb now matches the elevation of Mount Kenya’s summit, about 5,199 m above sea level."}, {"id": "mount-elbrus", "m": 5650, "title": "Mount Elbrus", "loc": "Russia", "text": "Your climb now matches the elevation of Mount Elbrus’s summit, about 5,642 m above sea level."}, {"id": "kilimanjaro", "m": 5900, "title": "Kilimanjaro", "loc": "Tanzania", "text": "Your climb has matched the summit elevation of Africa’s highest mountain!"}, {"id": "mount-logan", "m": 5960, "title": "Mount Logan", "loc": "Yukon, Canada", "text": "Your climb has matched the summit elevation of Canada’s highest mountain!"}, {"id": "denali", "m": 6190, "title": "Denali", "loc": "Alaska, USA", "text": "Your climb has matched the summit elevation of North America’s highest mountain!"}, {"id": "chimborazo", "m": 6270, "title": "Chimborazo", "loc": "Ecuador", "text": "Your climb now matches the elevation of Chimborazo’s summit, about 6,263 m above sea level."}, {"id": "huascaran", "m": 6770, "title": "Huascarán", "loc": "Peru", "text": "Your climb has matched the summit elevation of Peru’s highest mountain!"}, {"id": "aconcagua", "m": 6970, "title": "Aconcagua", "loc": "Argentina", "text": "Your climb has matched the summit elevation of South America’s highest mountain!"}, {"id": "nanda-devi", "m": 7820, "title": "Nanda Devi", "loc": "Uttarakhand, India", "text": "Your climb now matches the elevation of Nanda Devi’s summit, about 7,817 m above sea level."}, {"id": "lhotse", "m": 8520, "title": "Lhotse", "loc": "Nepal–China border", "text": "Your climb now matches the elevation of Lhotse’s summit, about 8,516 m above sea level."}, {"id": "k2", "m": 8620, "title": "K2", "loc": "Pakistan–China border", "text": "You’ve passed the summit elevation of the world’s second-highest mountain!"}, {"id": "mount-everest", "m": 8849, "title": "Mount Everest", "loc": "Nepal–China border", "text": "Your class has climbed past Mount Everest’s summit elevation!"}];
 const SKY = [[0,'#8fd0ff','#e6f6ff'],[300,'#79bdf5','#d2ecff'],[700,'#4f93e0','#b4dafa'],[1300,'#2a5aa8','#7fb2ea'],[2200,'#14275e','#3d6bb0'],[3500,'#070d2b','#1d3570']];
 
 let S = load() || fresh();
@@ -226,7 +234,7 @@ const flakes = Array.from({length:160},()=>({x:Math.random(),y:Math.random(),r:r
 
 function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:''}}
 function mk(name,i){return{id:'c'+Math.random().toString(36).slice(2,9),name,color:PAL[i%PAL.length],alt:0,best:0,quiet:0,total:0,finds:{},wins:0,zone:0,got:{}}}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(!s||!s.classes||!s.classes.length)return null;if(!PACE[s.pace])s.pace='normal';s.classes.forEach(c=>{c.got=c.got||{};c.finds=c.finds||{}});return s}catch(e){return null}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(!s||!s.classes||!s.classes.length)return null;if(!PACE[s.pace])s.pace='normal';s.classes.forEach(c=>{c.got=c.got||{};c.finds=c.finds||{};if(!c.ach){c.ach={};for(const a of ACHIEVEMENTS)if(c.alt>=a.m)c.ach[a.id]=1}});return s}catch(e){return null}}
 function save(){if(practice)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function rnd(a,b){return a+Math.random()*(b-a)}
 function hh(n){const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s)}
@@ -437,13 +445,68 @@ function glove(el,h,far){
   const p=S2([h[0]+u[0]*5-v[0]*2,h[1]+u[1]*5-v[1]*2]);g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.arc(p[0],p[1],3*k,0,7);g.fill();
 }
 function boot(f,knee,far){
-  const dx=f[0]-knee[0],dy=f[1]-knee[1],L=Math.hypot(dx,dy)||1,u=[dx/L,dy/L],v=[-u[1],u[0]];
-  const heel=[f[0]+10,f[1]-3], toe=[f[0]-17,f[1]-3], top1=[f[0]+v[0]*9-u[0]*12,f[1]+v[1]*9-u[1]*12], top2=[f[0]-v[0]*9-u[0]*12,f[1]-v[1]*9-u[1]*12];
-  const col=far?'#5e3c22':BOOT;
-  polyW([top1,top2,heel,[heel[0],heel[1]-5],toe,[toe[0]+1,toe[1]+6],[toe[0]+7,toe[1]+10]],col);
-  polyW([[heel[0]+1,heel[1]-1],[toe[0],toe[1]-1],[toe[0]+1,toe[1]-6],[heel[0]+1,heel[1]-6]],'#3b2a1c');
-  polyW([top1,top2,mixA(top2,heel,.25),mixA(top1,toe,.2)],far?'#4e321c':'#8c5d36');
-  if(!far){const a=S2(mixA(top1,top2,.5)),b=S2([toe[0]+9,toe[1]+6]);g.strokeStyle='#e8c99a';g.lineWidth=1.7*k;for(let i=0;i<3;i++){const t=i/3;g.beginPath();g.moveTo(lerp(a[0],b[0],t)-3.5*k,lerp(a[1],b[1],t));g.lineTo(lerp(a[0],b[0],t)+3.5*k,lerp(a[1],b[1],t)-2*k);g.stroke()}}
+  // stiff mountaineering boot: padded cuff, rounded toe toward the wall, thick lugged sole, crampon spikes
+  const dx=f[0]-knee[0],dy=f[1]-knee[1],L=Math.hypot(dx,dy)||1,u=[dx/L,dy/L];
+  const top=[f[0]-u[0]*15,f[1]-u[1]*15], c1=[top[0]-9,top[1]], c2=[top[0]+9,top[1]];
+  const base=far?'#5e3c22':BOOT, hi=far?'#6e4729':'#9a6a40', dk=far?'#3e2816':'#5a3a1f';
+  const P=(x,y)=>S2([f[0]+x,f[1]+y]), Q=(p)=>S2(p);
+  // upper
+  g.fillStyle=base;g.beginPath();
+  let a=Q(c1);g.moveTo(a[0],a[1]);
+  a=P(-6,8);g.lineTo(a[0],a[1]);
+  const t1=P(-17,7),t2=P(-23,1);g.quadraticCurveTo(t1[0],t1[1],t2[0],t2[1]);
+  a=P(-22,-4);g.lineTo(a[0],a[1]);a=P(12,-4);g.lineTo(a[0],a[1]);
+  const h1=P(14,2);a=P(11,8);g.quadraticCurveTo(h1[0],h1[1],a[0],a[1]);
+  a=Q(c2);g.lineTo(a[0],a[1]);g.closePath();g.fill();
+  // toe cap + heel counter highlights
+  polyS([P(-21,0),P(-17,5),P(-10,6),P(-11,-1)],hi);polyS([P(6,-2),P(11,-2),P(12,5),P(7,4)],dk);
+  // padded cuff
+  polyS([Q([c1[0]-1,c1[1]+2]),Q([c2[0]+1,c2[1]+2]),Q([c2[0],c2[1]-3]),Q([c1[0],c1[1]-3])],dk);
+  // laces + eyelets
+  if(!far){const l0=P(-4,7),l1=Q([top[0]-3,top[1]-4]);g.strokeStyle='#efd3a3';g.lineWidth=1.7*k;g.lineCap='round';
+    for(let i=0;i<4;i++){const t=i/3.5,x=lerp(l0[0],l1[0],t),y=lerp(l0[1],l1[1],t);g.beginPath();g.moveTo(x-3.5*k,y-1*k);g.lineTo(x+3.5*k,y+1*k);g.stroke();
+      g.fillStyle='#c9ced8';g.beginPath();g.arc(x-4*k,y-1*k,1.2*k,0,7);g.fill()}}
+  // thick lugged sole
+  polyS([P(-23,-3),P(13,-3),P(13,-9),P(-21,-9)],'#2b2118');
+  g.fillStyle='#3d3024';for(let i=0;i<5;i++){const q=P(-18+i*7,-9);g.fillRect(q[0],q[1],3.5*k,2.4*k)}
+  // crampons: frame bar, down spikes, front points into the wall
+  const sc=far?'#9aa2b0':'#d3d8e0', sd=far?'#6d7480':'#8a92a0';
+  polyS([P(-20,-9),P(11,-9),P(11,-11),P(-20,-11)],sd);
+  for(const x of [-17,-9,-1,7]){polyS([P(x-2.4,-10),P(x+2.4,-10),P(x,-18)],sc);polyS([P(x,-10),P(x+2.4,-10),P(x,-18)],sd)}
+  polyS([P(-21,-6),P(-21,-10),P(-30,-9)],sc);polyS([P(-21,-6),P(-30,-9),P(-21,-8)],sd);
+  polyS([P(-21,-2),P(-21,-5),P(-28,-4)],sc);
+  // strap over the instep
+  polyS([P(-12,7),P(-8,8),P(-4,-3),P(-8,-3)],sd);
+}
+let bits=[];
+// chips fly out from the wall (away from it, to the right), dust puffs drift and fade
+function chips(p,n,pow,col){for(let i=0;i<n;i++)bits.push({t:'chip',x:p[0],y:p[1],vx:rnd(60,190)*pow,vy:rnd(-20,150)*pow,a:rnd(0,6),va:rnd(-12,12),s:rnd(2.5,5.5)*(pow>1?1.2:1),life:rnd(.9,1.4),age:0,c:col})}
+function dust(p,n,col){for(let i=0;i<n;i++)bits.push({t:'dust',x:p[0]+rnd(-6,6),y:p[1]+rnd(-4,4),vx:rnd(20,90),vy:rnd(-10,40),s:rnd(1.5,3),grow:rnd(5,10),life:rnd(.5,.9),age:0,c:col})}
+function sparks(p,n){for(let i=0;i<n;i++)bits.push({t:'spark',x:p[0],y:p[1],vx:rnd(40,160),vy:rnd(-60,120),life:rnd(.2,.38),age:0})}
+function drawBits(dt){
+  for(const b of bits){b.age+=dt;const f=b.age/b.life;
+    if(b.t==='chip'){b.vy-=520*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;b.a+=b.va*dt;const p=S2([b.x,b.y]),r=b.s*k;
+      g.save();g.globalAlpha=Math.min(1,(1-f)*2);g.translate(p[0],p[1]);g.rotate(b.a);
+      polyS([[-r,-r*.6],[r*.9,-r*.8],[r*.5,r*.8]],b.c);polyS([[-r,-r*.6],[r*.5,r*.8],[-r*.2,r*.4]],'rgba(0,0,0,.25)');g.restore()}
+    else if(b.t==='dust'){b.vx*=Math.exp(-dt*2.5);b.vy*=Math.exp(-dt*2.5);b.x+=b.vx*dt;b.y+=b.vy*dt;const p=S2([b.x,b.y]);
+      g.globalAlpha=.42*(1-f)*(1-f);g.fillStyle=b.c;g.beginPath();g.arc(p[0],p[1],(b.s+b.grow*f)*k*.55,0,7);g.fill();g.globalAlpha=1}
+    else{b.x+=b.vx*dt;b.y+=b.vy*dt;const p=S2([b.x,b.y]);g.strokeStyle=`rgba(255,236,170,${1-f})`;g.lineWidth=2*k;g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(p[0]-b.vx*.03*k,p[1]+b.vy*.03*k);g.stroke()}
+  }
+  bits=bits.filter(b=>b.age<b.life);
+}
+// watch the climbing cycle and fire effects on each plant: axe strike, hand grab, crampon kick
+let cyc={n:null,q:0};
+function plantFX(P,m){
+  if(mode!=='climb'&&mode!=='back'&&mode!=='recover'){cyc.n=null;return}
+  const s=(dispY-HIP0)/STR, n=Math.floor(s), q=s-n, a=n%2===0?'r':'l';
+  if(cyc.n===n){
+    const rock=css(wallBase(m),.1), rockD=css(wallBase(m),-.15), dcol=m>=600?'#f4f8ff':css(wallBase(m),.45);
+    if(cyc.q<.3&&q>=.3){const h=P[a+'h'];
+      if(a==='r'){const d=[h[0]-P.rhm[0],h[1]-P.rhm[1]],L=Math.hypot(...d)||1,tip=[h[0]+d[0]/L*24-8,h[1]+d[1]/L*24];chips(tip,5,1.25,rock);chips(tip,2,1,rockD);sparks(tip,4);dust(tip,2,dcol)}
+      else{chips([h[0]-6,h[1]],2,.7,rock);dust([h[0]-4,h[1]],2,dcol)}}
+    if(cyc.q<.45&&q>=.45){const f=P[a+'f'],toe=[f[0]-26,f[1]-8];dust(toe,6,dcol);chips(toe,3,.85,rock);sparks(toe,2)}
+  }
+  cyc.n=n;cyc.q=q;
 }
 function drawAxe(el,h,s){
   const dx=h[0]-el[0],dy=h[1]-el[1],L=Math.hypot(dx,dy)||1,d=[dx/L,dy/L];let p=[-d[1],d[0]];if(p[0]>0)p=[-p[0],-p[1]];
@@ -618,7 +681,7 @@ function drawItems(c,P,front){
     g.font=`${fs}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';g.fillText(it.f.e,pos[0],pos[1]+bob);
   }
 }
-let conf=[], flash=0;
+let conf=[], flash=0, bannerQ=[], bannerT=0;
 function burst(x,y,n){for(let i=0;i<n;i++)conf.push({x,y,vx:rnd(-380,380),vy:rnd(-620,-160),a:rnd(0,6),va:rnd(-9,9),c:PAL[i%PAL.length],s:rnd(.7,1.3)})}
 function drawConfetti(dt){
   for(const p of conf){p.vy+=520*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.a+=p.va*dt;g.save();g.translate(p.x,p.y);g.rotate(p.a);g.fillStyle=p.c;g.fillRect(-5*p.s,-3*p.s,10*p.s,6*p.s);g.restore()}
@@ -660,6 +723,8 @@ function drawRope(P,c){
   path();g.strokeStyle='#c98a00';g.lineWidth=4.2*k;g.stroke();path();g.strokeStyle='#f4b400';g.lineWidth=2.6*k;g.stroke();
   for(let n=lo;n<=show;n++){const y=boltY(n),p=S2([ex(y)+3,y]);hexS(p[0],p[1],5*k,'#5d6577');
     g.strokeStyle='#e04e1a';g.lineWidth=2.6*k;g.beginPath();g.ellipse(p[0]+5*k,p[1]+7*k,3.6*k,7*k,-.4,0,7);g.stroke()}
+  if(mode==='clip'&&mtV>1.7&&!cyc.clipped){cyc.clipped=1;const y=boltY(nTop);chips([ex(y)+6,y],4,1,css(wallBase((y-HIP0)/U),.1));sparks([ex(y)+6,y],5)}
+  if(mode!=='clip')cyc.clipped=0;
   if(mode==='clip'&&mtV>1.7&&mtV<2.4){const y=boltY(nTop),p=S2([ex(y)+6,y]);g.strokeStyle=`rgba(255,255,255,${1-(mtV-1.7)/.7})`;g.lineWidth=3*k;for(let i=0;i<8;i++){const a=i*Math.PI/4,r1=10*k,r2=(16+(mtV-1.7)*30)*k;g.beginPath();g.moveTo(p[0]+Math.cos(a)*r1,p[1]+Math.sin(a)*r1);g.lineTo(p[0]+Math.cos(a)*r2,p[1]+Math.sin(a)*r2);g.stroke()}}
 }
 function drawRivals(c){
@@ -758,7 +823,8 @@ function tick(){
       case 'recover': if(mt>1.8)setMode('climb'); break;
     }
     c.best=Math.max(c.best||0,c.alt);
-    const z=zoneIdx(c.alt); if(z>(c.zone||0)){c.zone=z;toast(ZONES[z][2],ZONES[z][1],'New zone reached!',`${c.name} made it to ${ZONES[z][0].toLocaleString()} m`,z>=5?2:1)}
+    c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(c.alt>=a.m&&!c.ach[a.id]){c.ach[a.id]=1;bannerQ.push(a);save()}
+    const z=zoneIdx(c.alt); if(z>(c.zone||0)){c.zone=z;if(ZONES[z][0]!==8849)toast(ZONES[z][2],ZONES[z][1],'New zone reached!',`${c.name} made it to ${ZONES[z][0].toLocaleString()} m`,z>=5?2:1)}
     for(const o of S.classes)if(o!==c&&o.alt>1&&was<o.alt&&c.alt>=o.alt)toast('🚩',`Passed ${o.name}!`,'Overtake!',`${c.name} is now higher`,1);
     saveT+=dt; if(saveT>5){saveT=0;save()}
   }
@@ -811,13 +877,16 @@ function frame(){
   if(W>0){
     drawSky(m);drawClouds(false);drawBirds(dt,m);drawWall(m);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
     if(G.rope>0||c.alt>0)drawRope(P,c);
-    drawItems(c,P,0);drawClimber(P,c,G);drawItems(c,P,1);drawFly(dt,c,P);drawClouds(true);drawConfetti(dt);drawSnow(dt,m);
+    plantFX(P,m);
+    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawClouds(true);drawConfetti(dt);drawSnow(dt,m);
     const hd=S2(P.head), bt=gearBubble(c);
     if(bt)bubble(hd[0],hd[1]-30*k,bt);
     drawMap(c);
   }
   if(toastT>0){toastT-=dt;if(toastT<=0)$('#toast').classList.remove('show')}
   else if(toastQ.length){const t=toastQ.shift();$('#toast').className='toast show r'+t.r;$('#tEm').textContent=t.e;$('#tN').textContent=t.title;$('#tR').textContent=t.sub;$('#tW').textContent=t.small;toastT=6;}
+  if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('show')}
+  else if(bannerQ.length&&toastT<=0){const a=bannerQ.shift();$('#bM').textContent=a.m.toLocaleString()+' m';$('#bT').textContent=a.text;$('#bF').textContent=a.title+' · '+a.loc;$('#banner').classList.add('show');bannerT=8;burst(W/2,H*.22,a.id==='mount-everest'?240:70);if(a.id==='mount-everest')flash=1}
   boardT+=dt;if(boardT>1){boardT=0;renderBoard()}
   requestAnimationFrame(frame);
 }
@@ -922,7 +991,7 @@ function twoStep(btn,label,fn){btn.onclick=()=>{if(btn.dataset.arm){fn();btn.tex
 twoStep($('#weekBtn'),'End the week and crown a winner',()=>{
   stop();const top=[...S.classes].sort((x,y)=>y.alt-x.alt)[0];
   if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${Math.floor(top.alt).toLocaleString()} m. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
-  S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
+  S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
 });
 twoStep($('#wipeBtn'),'Erase everything',()=>{stop();S=fresh();geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;openSet();renderAll();save()});
 $('#practiceBtn').onclick=()=>{S.teacher=$('#tName').value.trim();setPractice(!practice);$('#setup').classList.remove('show')};
@@ -940,7 +1009,7 @@ requestAnimationFrame(frame);
 if(!S.teacher)openSet();
 {let blocked=!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);try{if(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))blocked=true}catch(e){}
  if(blocked){$('#micMsg span').textContent="This shared preview can't use a microphone. Try practice mode and hold Space to make noise. In the classroom, use the downloaded copy.";$('#micMsg').classList.add('show')}}
-if(location.hash==='#debug')window.QC={next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
+if(location.hash==='#debug')window.QC={next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{const c=cur();c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
 }
 </script>
 </body>
