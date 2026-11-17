@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.24">
+<meta name="version" content="v.25">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -42,8 +42,15 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .pts{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:5px 14px 5px 10px;border-radius:999px;background:rgba(28,37,54,.55);font:600 clamp(16px,1.6vw,22px) Fredoka,sans-serif;text-shadow:none;position:relative}
 .pts b{font:700 clamp(22px,2.3vw,32px)/1 Fredoka,sans-serif;color:#ffd23f;font-variant-numeric:tabular-nums}
 .pts b::before{content:'★ ';color:#ffd23f}
-.pdelta{position:absolute;left:100%;margin-left:10px;font:700 22px Fredoka,sans-serif;opacity:0;transform:translateY(0);transition:opacity .2s}
-.pdelta.show{animation:pd 1.6s ease-out forwards}
+.pdelta{position:absolute;left:100%;margin-left:12px;font:700 34px Fredoka,sans-serif;text-shadow:0 2px 0 rgba(0,0,0,.35);opacity:0;transform:translateY(0);transition:opacity .2s}
+.pdelta.show{animation:pd 2s ease-out forwards}
+.pts.losing{background:rgba(176,30,30,.85);animation:shake .35s linear infinite}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.drain{display:flex;align-items:center;gap:8px;margin-top:8px;padding:6px 14px 6px 10px;border-radius:14px;background:#c62828;color:#fff;font:600 clamp(15px,1.4vw,19px) Fredoka,sans-serif;text-shadow:none;width:max-content;max-width:100%;opacity:0;transform:translateY(-6px) scale(.95);transition:opacity .3s,transform .3s}
+.drain.show{opacity:1;transform:none}
+.drain b{font:700 clamp(24px,2.4vw,34px)/1 Fredoka,sans-serif}
+.drain .darr{font-size:1.3em;animation:pulse 1s infinite}
+@media(prefers-reduced-motion:reduce){.pts.losing{animation:none}}
 @keyframes pd{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
 .status{position:absolute;left:16px;bottom:72px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.93);font:600 clamp(16px,1.6vw,22px) Fredoka,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.12);max-width:calc(100% - 120px)}
 .dot{width:14px;height:14px;border-radius:50%;background:var(--soft);flex:none}
@@ -139,7 +146,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.24</span>
+      <span class="ver" title="Quiet Climb version">v.25</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -149,7 +156,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <section class="scene" id="scene">
       <canvas id="game" aria-label="The class climber on the cliff"></canvas>
       <div class="fog" id="fog"></div>
-      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div></div>
+      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div><div class="drain" id="drain"><span class="darr">▼</span><b id="drainV">0</b><span id="drainT">points lost, too loud!</span></div></div>
       <div class="status" id="status"><span class="dot"></span><span id="stText">Press Start to gear up</span></div>
       <div class="pbadge">Practice mode — progress isn't saved</div>
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
@@ -1046,7 +1053,7 @@ function doFall(c,tier){
   c.pen=(c.pen||0)+[0,15,30,50][tier];
   if(tier===3)loseTreasure(c);
   fallToast(c,tier,d.n,n0);
-  setMode('fall');save();flashDelta(points(c)-pb);fall.pBefore=points(c);
+  setMode('fall');save();flashDelta(points(c)-pb);lose(pb-points(c));fall.pBefore=points(c);
 }
 // still loud (and louder) while falling or hanging: slip again to the next tier
 function escalate(c,dt){
@@ -1058,7 +1065,7 @@ function escalate(c,dt){
   if(d.n>=fall.n){fall.tier=nt;return}
   c.pen=(c.pen||0)+[0,15,30,50][nt]-[0,15,30,50][fall.tier||1];
   Object.assign(fall,d,{tier:nt,caught:false,vy:Math.min(fall.vy,0),t:0});
-  flashDelta(points(c)-fall.pBefore);fall.pBefore=points(c);
+  lose(fall.pBefore-points(c));flashDelta(points(c)-fall.pBefore);fall.pBefore=points(c);
   if(nt===3)loseTreasure(c);
   fallToast(c,nt,d.n,fall.n0);
   setMode('fall');save();
@@ -1075,6 +1082,8 @@ function tick(){
   if(calib)calibStep(dt);
   if(running){
     if(over){overT+=dt;calmT=0;peak=Math.max(peak,smooth)}else{overT=Math.max(0,overT-dt*1.5);calmT+=dt;if(overT===0)peak=0}
+    loudNow=over&&mode!=='gear';
+    if(over&&mode!=='gear'){drainT+=dt;while(drainT>=2){drainT-=2;penalize(cur(),1)}}else drainT=Math.max(0,drainT-dt);
     if(devBoost>0)devBoost-=dt;
     const c=cur(), sp=(practice?6:1)*(devBoost>0?6:1), was=c.alt; mt+=dt;
     c.total+=dt*sp; sessT+=dt*sp;
@@ -1112,7 +1121,9 @@ const TPTS=[5,20,100];
 function trophyPts(c){let p=0;for(const f of FINDS)p+=(c.finds[f.id]||0)*TPTS[TIER(f.r)];return p}
 function quietPct(c){return c.total>30?Math.round(c.quiet/c.total*100):0}
 function points(c){return Math.max(0,Math.floor(c.alt*FT)+10*Math.floor(c.alt/ANCHOR+1e-9)+trophyPts(c)+quietPct(c)-(c.pen||0))}
-function penalize(c,n){c.pen=(c.pen||0)+n;flashDelta(-n)}
+let spellLost=0, spellQuiet=0, drainT=0, loudNow=false;
+function lose(n){if(n>0){spellLost+=n;spellQuiet=0}}
+function penalize(c,n){c.pen=(c.pen||0)+n;flashDelta(-n);lose(n)}
 let shownPts=null, deltaT=0;
 function flashDelta(n){if(!n)return;const e=$('#pDelta');e.textContent=(n>0?'+':'−')+Math.abs(n).toLocaleString();e.style.color=n>0?'#7CFC9A':'#ff8a80';e.classList.remove('show');void e.offsetWidth;e.classList.add('show')}
 function hud(){
@@ -1123,6 +1134,11 @@ function hud(){
    // count up smoothly, count down quickly, and stay perfectly still when nothing has changed
    if(gap>0)shownPts=Math.min(p,shownPts+Math.max(1,Math.ceil(gap*.25)));else if(gap<0)shownPts=Math.max(p,shownPts+Math.min(-1,Math.floor(gap*.35)));
    $('#ptsV').textContent=Math.round(shownPts).toLocaleString()}
+  {const loud=running&&loudNow;if(!loud)spellQuiet+=.1;
+   if(spellLost>0&&spellQuiet>4)spellLost=0;
+   $('#drain').classList.toggle('show',spellLost>0);$('#drainV').textContent='−'+spellLost.toLocaleString();
+   $('#drainT').textContent=loud?'points lost, too loud!':'points lost. Shh, it stops when it’s quiet';
+   $('#ptsBox').classList.toggle('losing',loud&&spellLost>0)}
   $('#zoneV').textContent=ZONES[zoneIdx(c.alt)][1];
   const to=ANCHOR-(c.alt%ANCHOR);
   $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${H_(to,'ceil')}`;
