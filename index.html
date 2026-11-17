@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.14">
+<meta name="version" content="v.15">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -60,7 +60,7 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .toast .em{font-size:50px;line-height:1}
 .toast b{display:block;font:700 24px/1.15 Fredoka,sans-serif}
 .toast small{font-weight:800;color:var(--soft);font-size:14px}
-.toast.r2 small,.toast.r3 small{color:#b0389a}
+.toast.r1 small:first-child,.toast.r2 small:first-child{color:#8b5cf6}.toast.r3 small:first-child{color:#d99a00}
 .mustard{position:absolute;left:16px;right:16px;bottom:130px;display:none;padding:12px 16px;border-radius:14px;background:#fff4e8;border:2px solid #f6c39f;font-weight:700;align-items:center;gap:12px;flex-wrap:wrap}
 .mustard.show{display:flex}
 .pbadge{position:absolute;right:16px;top:16px;padding:6px 12px;border-radius:999px;background:#b0389a;color:#fff;font-weight:800;font-size:14px;display:none}
@@ -83,11 +83,15 @@ ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .nm{font-weight:800;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
 .nm small{display:block;font-weight:700;color:var(--soft);font-size:13px}
 .alt{font:600 19px Fredoka,sans-serif;text-align:right;white-space:nowrap}
-.finds{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
-.f{position:relative;aspect-ratio:1;border-radius:10px;background:#f1f5fb;display:grid;place-items:center;font-size:22px}
-.f.no{color:#c3cddc;font:700 16px Fredoka,sans-serif}
-.f.r2{background:#fbeefa}.f.r3{background:#fff5d6}
-.f i{position:absolute;right:2px;bottom:0;font:800 10px Nunito,sans-serif;font-style:normal;color:var(--soft)}
+.tally{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.tl{border:3px solid;border-radius:14px;padding:6px 4px;text-align:center;line-height:1.1}
+.tl b{display:block;font:700 26px Fredoka,sans-serif}
+.tl span{font-weight:800;font-size:13px}
+.finds{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.f{position:relative;aspect-ratio:1;border-radius:12px;border:3px solid;display:grid;place-items:center;font-size:26px}
+.f.t2{box-shadow:0 0 10px rgba(233,176,0,.6)}
+.f i{position:absolute;right:-6px;top:-8px;min-width:20px;height:20px;padding:0 4px;border-radius:10px;font:800 12px/20px Nunito,sans-serif;font-style:normal;color:#fff;text-align:center}
+.empty{grid-column:1/-1;color:var(--soft);font-weight:700;font-size:14px;padding:6px 2px}
 .modal{position:fixed;inset:0;background:rgba(20,30,50,.5);display:none;place-items:center;padding:16px;z-index:20}
 .modal.show{display:grid}
 .sheet{width:min(660px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;border-radius:22px;padding:24px}
@@ -115,7 +119,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
 .cele{text-align:center}
 .cele .big{font:700 clamp(30px,4vw,46px)/1.1 Fredoka,sans-serif;margin:8px 0}
 @media(max-width:900px){.app{height:auto}.stage{grid-template-columns:minmax(0,1fr)}.scene{min-height:70vw}aside{overflow:visible}}
-@media(max-width:600px){header,.stage{padding-inline:10px}.finds{grid-template-columns:repeat(6,minmax(0,1fr))}.toast .em{font-size:38px}.toast b{font-size:19px}.scene{min-height:110vw}}
+@media(max-width:600px){header,.stage{padding-inline:10px}.finds{grid-template-columns:repeat(5,minmax(0,1fr))}.toast .em{font-size:38px}.toast b{font-size:19px}.scene{min-height:110vw}}
 @media(prefers-reduced-motion:reduce){.climbing .dot{animation:none}.toast{transition:none}}
 </style>
 </head>
@@ -125,7 +129,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.14</span>
+      <span class="ver" title="Quiet Climb version">v.15</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -150,7 +154,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
         <div class="times"><span>This session <b id="sessT">0:00</b></span><span>Quiet <b id="sessQ">0:00</b></span></div>
       </div>
       <div class="card"><h2>Who's highest this week</h2><ol id="board"></ol></div>
-      <div class="card"><h2 id="findsH">Trophy case</h2><div class="finds" id="finds"></div></div>
+      <div class="card"><h2 id="findsH">Trophy case</h2><div class="tally" id="tally"></div><div class="finds" id="finds"></div></div>
     </aside>
   </main>
 </div>
@@ -226,7 +230,8 @@ const FINDS = [
   ['star','🌠','Shooting star',1,900,99999],['aurora','🌌','Northern lights',1,900,3000],['moon','🌕','Moon rock',1,1200,99999],['comet','☄️','Comet',2,1300,99999],
   ['satellite','🛰️','Satellite',2,1500,99999],['rocket','🚀','Rocket',2,1800,99999],['ufo','🛸','UFO',3,1300,99999],['alien','👽','Friendly alien',3,2000,99999]
 ].map(([id,e,n,r,a,b])=>({id,e,n,r,z:[a,b]}));
-const RAR = ['Common find','Uncommon find','Rare find!','LEGENDARY find!!'], RW = [60,28,10,2];
+const RAR = ['Common find','Rare find!','Rare find!','LEGENDARY find!!'], RW = [60,28,10,2];
+const TIER=r=>r>=3?2:r>=1?1:0, TIERS_UI=[['Common','#f26b3a','#fff1ea'],['Rare','#8b5cf6','#f3eefe'],['Legendary','#d99a00','#fff6d6']];
 const ZONES = [[0,'Base camp','🏕️'],[15,'The lower cliffs','🧗'],[60,'Bird nest ledges','🪺'],[150,'Goat crags','🐐'],[300,'The misty heights','🌫️'],[450,'The cloud layer','☁️'],[600,'The snow line','❄️'],[900,'Above the clouds','🌤️'],[1300,'Edge of the sky','✨'],[2000,'Where the stars live','🌌'],[3500,'Almost to space','🚀'],[8849,'Higher than Mount Everest!','🏔️']];
 const GOALS = {silent:'Silent',independent:'Independent',partner:'Partner work',custom:'Custom'};
 const PACE = {slow:['Slow',5],normal:['Normal',10],fast:['Fast',15],turbo:['Turbo',20]};
@@ -708,7 +713,7 @@ function drawItems(c,P,front){
     const bob=got?0:Math.sin(time*2+b)*3*k;
     let pos=S2([ex(it.y)+62,it.y+20]);
     if(held&&ph>.28)pos=S2(P.rh);
-    if(!got){const rr=it.f.r, glow=['rgba(255,240,160,.35)','rgba(255,240,160,.42)','rgba(199,125,255,.45)','rgba(255,205,60,.6)'][rr], spk=['rgba(255,226,110,.95)','rgba(255,226,110,.95)','rgba(214,160,255,1)',`hsl(${(time*120)%360},95%,65%)`][rr], ns=rr>=2?8:4, gr=fs*(rr>=3?.95+.08*Math.sin(time*5):rr===2?.82:.72);
+    if(!got){const rr=it.f.r, glow=['rgba(255,170,120,.38)','rgba(167,130,255,.42)','rgba(167,130,255,.5)','rgba(255,205,60,.6)'][rr], spk=['rgba(255,160,100,.95)','rgba(190,160,255,1)','rgba(190,160,255,1)',`hsl(${(time*120)%360},95%,65%)`][rr], ns=rr>=2?8:4, gr=fs*(rr>=3?.95+.08*Math.sin(time*5):rr===2?.82:.72);
       g.fillStyle=glow;g.beginPath();g.arc(pos[0],pos[1]+bob,gr,0,7);g.fill();
       for(let i=0;i<ns;i++){const a=time*(rr>=2?2.2:1.4)+i*2*Math.PI/ns,r=fs*(rr>=2?1:.85);hexS(pos[0]+Math.cos(a)*r,pos[1]+bob+Math.sin(a)*r,(rr>=2?4:3)+2*Math.sin(time*4+i),spk,0,4)}}
     g.font=`${fs}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';g.fillText(it.f.e,pos[0],pos[1]+bob);
@@ -967,9 +972,13 @@ function renderBoard(){
     return `<li class="row${c.id===a.id?' me':''}"><span class="rk">${i+1}</span><span class="sw" style="background:${c.color}"></span><span class="nm">${esc(c.name)}<small>${pct}${wins}</small></span><span class="alt">${Math.floor(c.alt).toLocaleString()} m</span></li>`}).join('');
 }
 function renderFinds(){
-  const c=cur(), got=FINDS.filter(f=>c.finds[f.id]).length;
-  $('#findsH').innerHTML=`Trophy case <small>${got} of ${FINDS.length} found</small>`;
-  $('#finds').innerHTML=FINDS.map(f=>c.finds[f.id]?`<div class="f r${f.r}" title="${esc(f.n)}">${f.e}${c.finds[f.id]>1?`<i>×${c.finds[f.id]}</i>`:''}</div>`:`<div class="f no" title="Not found yet">?</div>`).join('');
+  // no total is shown on purpose: kids never know how many treasures exist
+  const c=cur(), owned=FINDS.filter(f=>c.finds[f.id]>0).sort((a,b)=>TIER(b.r)-TIER(a.r)), n=[0,0,0];
+  owned.forEach(f=>n[TIER(f.r)]+=c.finds[f.id]);
+  $('#findsH').textContent='Trophy case';
+  $('#tally').innerHTML=TIERS_UI.map(([name,col,bg],i)=>`<div class="tl" style="border-color:${col};background:${bg};color:${col}"><b>${n[i]}</b><span>${name}</span></div>`).join('');
+  $('#finds').innerHTML=owned.length?owned.map(f=>{const t=TIER(f.r),[name,col,bg]=TIERS_UI[t],x=c.finds[f.id];
+    return `<div class="f t${t}" title="${esc(f.n)} · ${name}" style="border-color:${col};background:${bg}">${f.e}${x>1?`<i style="background:${col}">×${x}</i>`:''}</div>`}).join(''):'<div class="empty">Nothing yet. Keep climbing to find treasures on the ledges!</div>';
 }
 function renderTitle(){const t=titleFor(S.teacher,cur().name);$('#title').textContent=t;document.title=t+' · Quiet Climb'}
 function renderSel(){$('#classSel').innerHTML=S.classes.map(c=>`<option value="${c.id}"${c.id===S.active?' selected':''}>${esc(c.name)}</option>`).join('')}
