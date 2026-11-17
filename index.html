@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.17">
+<meta name="version" content="v.18">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -129,7 +129,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.17</span>
+      <span class="ver" title="Quiet Climb version">v.18</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -139,7 +139,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <section class="scene" id="scene">
       <canvas id="game" aria-label="The class climber on the cliff"></canvas>
       <div class="fog" id="fog"></div>
-      <div class="hud"><div class="altn"><b id="altV">0</b><span>m</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div></div>
+      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div></div>
       <div class="status" id="status"><span class="dot"></span><span id="stText">Press Start to gear up</span></div>
       <div class="pbadge">Practice mode — progress isn't saved</div>
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
@@ -181,13 +181,16 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <input type="range" class="rng" id="custom" min="10" max="90" step="1" aria-label="Custom volume goal">
     <p class="hint">Short noises like a cough or a dropped pencil are ignored. The climber only reacts when the noise lasts.</p>
 
+    <h4>Height shown in</h4>
+    <div class="seg" id="unitSeg"></div>
+    <p class="hint">Only changes how heights are shown. Progress is the same either way. The height-fact banners keep their original wording.</p>
     <h4>Falls</h4>
     <div class="seg" id="fallSeg"></div>
     <p class="hint">Tough: the louder it gets, the worse the fall. Past the goal line the climber slips to the last checkpoint. Past the orange line he drops two checkpoints. Past the red line he also loses a treasure. Past the dark red line he falls all the way back to base camp. Gentle: every fall is just to the last checkpoint.</p>
     <h4>Climbing</h4>
     <label class="lb">Climb speed</label>
     <div class="seg" id="paceSeg"></div>
-    <p class="hint">Metres climbed per minute of quiet work. A checkpoint is clipped every 10 m, and a ledge with something to collect turns up every couple of minutes.</p>
+    <p class="hint">Height climbed per minute of quiet work. A checkpoint is clipped every 10 m (about 33 ft), and a ledge with something to collect turns up every couple of minutes.</p>
 
     <h4>Saved progress</h4>
     <p class="hint">Every class's height, trophies and wins save automatically in this browser and survive reloads and updates. Progress is kept per web address, so use the same link on the classroom computer every time. Save a backup file now and then to be extra safe, or to move to another computer.</p>
@@ -248,7 +251,7 @@ let lastPose=null, fromPose=null, blend=1, poseMode='', mtV=0, vMode='', grab=nu
 let W=0, H=0, k=1, EB=0, time=0, birds=[], birdT=4;
 const flakes = Array.from({length:160},()=>({x:Math.random(),y:Math.random(),r:rnd(1,3),s:rnd(.6,1.4)}));
 
-function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:'',falls:'tough'}}
+function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:'',falls:'tough',units:'ft'}}
 function mk(name,i){return{id:'c'+Math.random().toString(36).slice(2,9),name,color:PAL[i%PAL.length],alt:0,best:0,quiet:0,total:0,finds:{},wins:0,zone:0,got:{}}}
 // Progress is kept in this browser's local storage under one fixed name that never changes between versions.
 // Every save first copies the previous save aside, so a bad write can always be rolled back.
@@ -256,6 +259,7 @@ function parseSave(txt){try{const s=JSON.parse(txt);return s&&s.classes&&s.class
 function upgrade(s){
   if(!PACE[s.pace])s.pace='normal';
   if(!s.falls)s.falls='tough';
+  if(!s.units)s.units='ft';
   s.classes.forEach(c=>{c.alt=+c.alt||0;c.got=c.got||{};c.finds=c.finds||{};c.wins=c.wins||0;if(!c.ach){c.ach={};for(const a of ACHIEVEMENTS)if(c.alt>=a.m)c.ach[a.id]=1}});
   return s;
 }
@@ -286,6 +290,10 @@ function goalVal(){
   if(c){const d=Math.max(8,c.talk-c.base);return Math.min(95,{silent:c.base+.3*d,independent:c.base+.6*d,partner:c.talk+8}[S.goal])}
   return {silent:30,independent:45,partner:60}[S.goal];
 }
+const FT=3.28084;
+function U_(){return S.units==='m'?'m':'ft'}
+function cv_(m){return S.units==='m'?m:m*FT}
+function H_(m,round){const v=cv_(m);return (round==='ceil'?Math.ceil(v-1e-6):Math.floor(v+1e-6)).toLocaleString()+' '+U_()}
 function zoneIdx(m){let i=0;while(i+1<ZONES.length&&m>=ZONES[i+1][0])i++;return i}
 function titleFor(t,cn){
   t=(t||'').trim();cn=(cn||'').trim();
@@ -878,7 +886,7 @@ function drawMap(c){
   g.fillStyle=c.color;g.beginPath();g.roundRect(x-5,cy,10,b-cy,5);g.fill();
   for(let i=1;i<10;i++){const yy=b-(b-t)*i/10;g.fillStyle='rgba(28,37,54,.25)';g.fillRect(x+8,yy-1,5,2)}
   [[t,last+ANCHOR],[b,last]].forEach(([yy,v],i)=>{g.strokeStyle='#e04e1a';g.lineWidth=3;g.beginPath();g.ellipse(x,yy,5,9,0,0,7);g.stroke();
-    g.fillStyle='#1c2536';g.font='800 13px Nunito, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(v.toLocaleString()+' m',x,yy+(i?26:-26))});
+    g.fillStyle='#1c2536';g.font='800 13px Nunito, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(H_(v),x,yy+(i?26:-26))});
   hexS(x,cy,10,c.color);g.strokeStyle='#fff';g.lineWidth=2.5;g.beginPath();g.arc(x,cy,10,0,7);g.stroke();
 }
 let pebbles=[],pebT=6;
@@ -895,7 +903,7 @@ function drawMist(front){
     gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,front?'rgba(240,245,252,.32)':'rgba(255,255,255,.75)');gr.addColorStop(1,'rgba(255,255,255,0)');
     g.fillStyle=gr;g.fillRect(0,p-h,W,h*2);
     if(!front){for(let i=0;i<9;i++){const x=((i/8)*W*1.2+time*(12+i*3))%(W*1.25)-W*.1;hexS(x,p+Math.sin(time*.5+i)*12*k,(50+hh(i+st[0])*50)*k,'rgba(255,255,255,.55)',0,7)}}
-    else{g.font=`700 ${Math.max(16,15*k)}px Fredoka, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='rgba(28,37,54,.75)';g.fillText(`${st[0].toLocaleString()} m · ${st[1]}`,W*.62,p)}
+    else{g.font=`700 ${Math.max(16,15*k)}px Fredoka, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='rgba(28,37,54,.75)';g.fillText(`${H_(st[0])} · ${st[1]}`,W*.62,p)}
   }
 }
 function drawSnow(dt,m){
@@ -999,7 +1007,7 @@ function tick(){
     }
     c.best=Math.max(c.best||0,c.alt);
     c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(c.alt>=a.m&&!c.ach[a.id]){c.ach[a.id]=1;bannerQ.push(a);save()}
-    const z=zoneIdx(c.alt); if(z>(c.zone||0)){c.zone=z;if(ZONES[z][0]!==8849)toast(ZONES[z][2],ZONES[z][1],'New zone reached!',`${c.name} made it to ${ZONES[z][0].toLocaleString()} m`,z>=5?2:1)}
+    const z=zoneIdx(c.alt); if(z>(c.zone||0)){c.zone=z;if(ZONES[z][0]!==8849)toast(ZONES[z][2],ZONES[z][1],'New zone reached!',`${c.name} made it to ${H_(ZONES[z][0])}`,z>=5?2:1)}
     for(const o of S.classes)if(o!==c&&o.alt>1&&was<o.alt&&c.alt>=o.alt)toast('🚩',`Passed ${o.name}!`,'Overtake!',`${c.name} is now higher`,1);
     saveT+=dt; if(saveT>2){saveT=0;save()}
   }
@@ -1008,10 +1016,10 @@ function tick(){
 }
 function hud(){
   const c=cur(), a=Math.floor(c.alt+1e-6);
-  $('#altV').textContent=a.toLocaleString();
+  $('#altV').textContent=Math.floor(cv_(c.alt)+1e-6).toLocaleString();$('#altU').textContent=U_();
   $('#zoneV').textContent=ZONES[zoneIdx(c.alt)][1];
   const to=ANCHOR-(c.alt%ANCHOR);
-  $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${Math.ceil(to-1e-6)} m`;
+  $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${H_(to,'ceil')}`;
   const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:grab&&TIER(grab.f.r)===2?'A secret hole in the rock!':grab&&TIER(grab.f.r)===1?'Caught something flying by!':'Found something!',look:'Uh oh… the climber can hear you!',fall:['','Slipped to the last checkpoint','Big fall! Down two checkpoints','Big fall, and a treasure dropped!','All the way back to base camp!'][fall?fall.tier||1:1],hang:'Get quiet to start climbing again',recover:'Back to climbing!'};
   $('#stText').textContent=running?T[mode]:T.idle;
   $('#status').className='status '+(!running?'':['look','fall','hang'].includes(mode)?'holding':'climbing');
@@ -1061,7 +1069,7 @@ function frame(){
   if(toastT>0){toastT-=dt;if(toastT<=0)$('#toast').classList.remove('show')}
   else if(toastQ.length){const t=toastQ.shift();$('#toast').className='toast show r'+t.r;$('#tEm').textContent=t.e;$('#tN').textContent=t.title;$('#tR').textContent=t.sub;$('#tW').textContent=t.small;toastT=6;}
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('show')}
-  else if(bannerQ.length&&toastT<=0){const a=bannerQ.shift();$('#bM').textContent=a.m.toLocaleString()+' m';$('#bT').textContent=a.text;$('#bF').textContent=a.title+' · '+a.loc;$('#banner').classList.add('show');bannerT=8;burst(W/2,H*.22,a.id==='mount-everest'?240:70);if(a.id==='mount-everest')flash=1}
+  else if(bannerQ.length&&toastT<=0){const a=bannerQ.shift();$('#bM').textContent=H_(a.m);$('#bT').textContent=a.text;$('#bF').textContent=a.title+' · '+a.loc;$('#banner').classList.add('show');bannerT=8;burst(W/2,H*.22,a.id==='mount-everest'?240:70);if(a.id==='mount-everest')flash=1}
   boardT+=dt;if(boardT>1){boardT=0;renderBoard()}
   requestAnimationFrame(frame);
 }
@@ -1078,7 +1086,7 @@ function renderBoard(){
   $('#board').innerHTML=list.map((c,i)=>{
     const pct=c.total>30?Math.round(c.quiet/c.total*100)+'% quiet':'Not started';
     const wins=c.wins?` · ${c.wins} week${c.wins>1?'s':''} won`:'';
-    return `<li class="row${c.id===a.id?' me':''}"><span class="rk">${i+1}</span><span class="sw" style="background:${c.color}"></span><span class="nm">${esc(c.name)}<small>${pct}${wins}</small></span><span class="alt">${Math.floor(c.alt).toLocaleString()} m</span></li>`}).join('');
+    return `<li class="row${c.id===a.id?' me':''}"><span class="rk">${i+1}</span><span class="sw" style="background:${c.color}"></span><span class="nm">${esc(c.name)}<small>${pct}${wins}</small></span><span class="alt">${H_(c.alt)}</span></li>`}).join('');
 }
 function renderFinds(){
   // no total is shown on purpose: kids never know how many treasures exist
@@ -1129,7 +1137,7 @@ $('#celeOk').onclick=()=>$('#cele').classList.remove('show');
 
 /* ---------- settings ---------- */
 function openSet(){
-  $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();drawFalls();$('#custom').value=S.custom;preview();
+  $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();drawFalls();drawUnits();$('#custom').value=S.custom;preview();
   $('#calMsg').textContent=S.cal?`Calibrated (quiet ≈ ${Math.round(S.cal.base)}, talking ≈ ${Math.round(S.cal.talk)})`:'Not calibrated yet';
   if(an)listMics();
   if(!S.cal&&an)$('#calMsg').textContent='Microphone is on. Press Calibrate when the room is ready.';
@@ -1154,7 +1162,9 @@ $('#goalSeg').onclick=e=>{const key=e.target.dataset.g;if(!key)return;if(key==='
 $('#custom').oninput=e=>{S.custom=+e.target.value;renderGoal()};
 function drawFalls(){$('#fallSeg').innerHTML=[['tough','Tough'],['gentle','Gentle']].map(([key,n])=>`<button data-f="${key}" class="${(S.falls||'tough')===key?'on':''}">${n}</button>`).join('')}
 $('#fallSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.f;if(key){S.falls=key;drawFalls();renderGoal();save()}};
-function drawPace(){$('#paceSeg').innerHTML=Object.entries(PACE).map(([key,[n,v]])=>`<button data-p="${key}" class="${S.pace===key?'on':''}">${n} · ${v} m/min</button>`).join('')}
+function drawUnits(){$('#unitSeg').innerHTML=[['ft','Feet'],['m','Metres']].map(([key,n])=>`<button data-u="${key}" class="${U_()===key?'on':''}">${n}</button>`).join('')}
+$('#unitSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.u;if(key){S.units=key;drawUnits();drawPace();renderAll();save()}};
+function drawPace(){$('#paceSeg').innerHTML=Object.entries(PACE).map(([key,[n,v]])=>`<button data-p="${key}" class="${S.pace===key?'on':''}">${n} · ${S.units==='m'?v+' m':Math.round(v*FT)+' ft'}/min</button>`).join('')}
 $('#paceSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.p;if(key){S.pace=key;drawPace()}};
 $('#micSel').onchange=async e=>{S.micId=e.target.value;await startMic();save()};
 $('#calBtn').onclick=async()=>{
@@ -1176,7 +1186,7 @@ function calibStep(dt){
 function twoStep(btn,label,fn){btn.onclick=()=>{if(btn.dataset.arm){fn();btn.textContent=label;delete btn.dataset.arm}else{btn.dataset.arm=1;btn.textContent='Click again to confirm';setTimeout(()=>{delete btn.dataset.arm;btn.textContent=label},4000)}}}
 twoStep($('#weekBtn'),'End the week and crown a winner',()=>{
   stop();const top=[...S.classes].sort((x,y)=>y.alt-x.alt)[0];
-  if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${Math.floor(top.alt).toLocaleString()} m. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
+  if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${H_(top.alt)}. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
   S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
 });
 twoStep($('#resetBtn'),'Reset all climbs to base camp',()=>{stop();S.classes.forEach(c=>{c.alt=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save()});
