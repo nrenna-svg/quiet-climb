@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
+<meta name="version" content="v.11">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -23,7 +24,8 @@ button{cursor:pointer}
 header{display:flex;align-items:center;gap:16px;padding:12px 20px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:8px;font:600 18px Fredoka,sans-serif;color:var(--soft)}
 h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-serif;text-wrap:balance}
-.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ver{padding:4px 10px;border-radius:999px;background:#1c2536;color:#fff;font:700 13px Nunito,sans-serif;letter-spacing:.3px;white-space:nowrap}
 .btn{min-height:44px;padding:8px 16px;border-radius:12px;border:2px solid var(--line);background:#fff;font-weight:800}
 .btn:hover{border-color:#b9c7da}
 .btn.primary{background:var(--accent);border-color:var(--accent2);color:#fff}
@@ -122,6 +124,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
+      <span class="ver" title="Quiet Climb version">v.11</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
