@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.30">
+<meta name="version" content="v.31">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -60,6 +60,11 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .drain .darr{font-size:1.3em;animation:pulse 1s infinite}
 @media(prefers-reduced-motion:reduce){.pts.losing{animation:none}}
 @keyframes pd{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
+.pts{pointer-events:auto;cursor:pointer;user-select:none}
+.pts:hover{background:rgba(28,37,54,.75)}
+.award{pointer-events:auto;display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px 8px 14px;border-radius:16px;background:#fff;color:var(--ink);text-shadow:none;box-shadow:0 10px 26px rgba(0,0,0,.25);width:max-content;font:600 16px Fredoka,sans-serif}
+.award button{min-width:64px;min-height:48px;border:0;border-radius:12px;background:#2bb673;color:#fff;font:700 22px Fredoka,sans-serif;cursor:pointer}
+.award button:hover{background:#229a60}
 .status{position:absolute;left:16px;bottom:72px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.93);font:600 clamp(16px,1.6vw,22px) Fredoka,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.12);max-width:calc(100% - 120px)}
 .dot{width:14px;height:14px;border-radius:50%;background:var(--soft);flex:none}
 .climbing .dot{background:#2bb673;animation:pulse 1.6s infinite}
@@ -157,8 +162,9 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" id="verTag" title="Quiet Climb version — click for history" style="cursor:pointer">v.30</span>
+      <span class="ver" id="verTag" title="Quiet Climb version — click for history" style="cursor:pointer">v.31</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
+      <button class="btn" id="pipBtn" title="Pop the game into a small window that stays on top">Mini window</button>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
     </div>
@@ -167,7 +173,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <section class="scene" id="scene">
       <canvas id="game" aria-label="The class climber on the cliff"></canvas>
       <div class="fog" id="fog"></div>
-      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div><div class="drain" id="drain"><span class="darr">▼</span><b id="drainV">0</b><span id="drainT">points lost, too loud!</span></div><div class="rival" id="rival"></div></div>
+      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div><div class="award" id="award" hidden><span>Bonus points</span><button data-aw="5">+5</button><button data-aw="10">+10</button><button data-aw="25">+25</button></div><div class="drain" id="drain"><span class="darr">▼</span><b id="drainV">0</b><span id="drainT">points lost, too loud!</span></div><div class="rival" id="rival"></div></div>
       <div class="status" id="status"><span class="dot"></span><span id="stText">Press Start to gear up</span></div>
       <div class="pbadge">Practice mode — progress isn't saved</div>
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
@@ -294,7 +300,8 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
 
 <script>
 {
-const $ = s => document.querySelector(s);
+let pipWin=null;
+const $ = s => document.querySelector(s)||(pipWin&&pipWin.document.querySelector(s));
 const KEY = 'quietclimb.v2';
 const PAL = ['#f26b3a','#2a9d8f','#e9b949','#7b5cd6','#e76f9a','#3a86ff','#6aa84f','#c0392b'];
 const FINDS = [
@@ -370,7 +377,7 @@ function goalVal(){
   return {silent:30,independent:45,partner:60}[S.goal];
 }
 // Version history shown in Settings. Add a new entry at the top with every update.
-const CHANGELOG=[{"v": "v.30", "d": "Nov 17, 2026", "items": ["Customize the mountain (Settings): school name, messages for every class or one class, and kids’ names.","Messages appear on the cliff as wooden signs, nailed banners or words carved into the rock.","Banner planes can cheer for your school.","Dev menu: Custom sign button."]},{"v": "v.29", "d": "Nov 17, 2026", "items": ["The race chip fades in when something changes, stays about 8 seconds, then fades out and pops back now and then (every 20 s when a class is close, otherwise every 45 s).","The chip wraps onto two lines so it never covers the climber."]},{"v": "v.28", "d": "Nov 17, 2026", "items": ["Chip now says “Another class is higher up the mountain… let’s try to catch them!”"]},{"v": "v.27", "d": "Nov 17, 2026", "items": ["Version history in Settings (this list); click the version stamp to open it."]}, {"v": "v.26", "d": "Nov 17, 2026", "items": ["“Next to beat” chip under the points: names the class ahead only within 100 ft, warns when a class is close behind, shows when you’re in the lead.", "Leaderboard hidden by default (Settings → Leaderboard to show it).", "Rival flags on the cliff show ??? until you’re close.", "End of the week reveals the full final standings with medals."]}, {"v": "v.25", "d": "Nov 17, 2026", "items": ["Staying loud drains 1 point every 2 seconds.", "Red “points lost” bar and shaking points box so kids can see points slipping away.", "Bigger red and green point pop-ups."]}, {"v": "v.24", "d": "Nov 17, 2026", "items": ["Fixed the points counter flickering back and forth."]}, {"v": "v.23", "d": "Nov 17, 2026", "items": ["Live points score: 1 per foot, 10 per checkpoint, treasure points, plus quiet %.", "Trophy case points: common 5, rare 20, legendary 100.", "Points lost for warnings and falls."]}, {"v": "v.22", "d": "Nov 17, 2026", "items": ["Developer menu in Settings (PIN): jump to a height and play any animation on demand."]}, {"v": "v.21", "d": "Nov 17, 2026", "items": ["Tough falls max out at 3 checkpoints (never back to base camp) and trigger at lower noise.", "If it gets louder while he’s hanging, he slips further, live."]}, {"v": "v.20", "d": "Nov 17, 2026", "items": ["Skydivers in the background: freefall, then parachutes, sometimes in groups."]}, {"v": "v.19", "d": "Nov 17, 2026", "items": ["Height-fact banners switch between feet and metres."]}, {"v": "v.18", "d": "Nov 17, 2026", "items": ["Heights shown in feet by default, with a Feet / Metres setting."]}, {"v": "v.17", "d": "Nov 17, 2026", "items": ["Birds near and far (eagles, geese, gulls), small planes with banners, very rare silly flybys."]}, {"v": "v.16", "d": "Nov 17, 2026", "items": ["Climber flails and swings while hanging until the room is quiet.", "Rare treasures fly in; legendary ones hide in a hole in the rock.", "The cliff changes colour and shape every 100 m, with a mist band and label.", "Falling pebbles and drifting leaves."]}, {"v": "v.15", "d": "Nov 17, 2026", "items": ["Trophy case keeps the total a mystery and counts Common, Rare and Legendary in matching colours."]}, {"v": "v.14", "d": "Nov 17, 2026", "items": ["Progress saves automatically and survives reloads and updates; backup file save and load.", "Carabiner clip at every checkpoint is a clear three-step moment.", "Louder noise means bigger falls (several levels)."]}, {"v": "v.13", "d": "Nov 17, 2026", "items": ["Clear microphone messages and a Try again button, no reload needed."]}, {"v": "v.12", "d": "Nov 17, 2026", "items": ["Faster climb speeds: Slow, Normal, Fast and a new Turbo."]}, {"v": "v.11", "d": "Nov 17, 2026", "items": ["Version stamp next to the class picker."]}, {"v": "v.10", "d": "Nov 17, 2026", "items": ["100 real-world height achievements pop up as banners with fun facts."]}, {"v": "v.9", "d": "Nov 17, 2026", "items": ["Mountaineering boots with crampon spikes.", "Rock chips, sparks and dust on every axe hit, handhold and step."]}, {"v": "v.8", "d": "Nov 17, 2026", "items": ["Game put on GitHub so it can have a live link with the microphone."]}, {"v": "v.7", "d": "Nov 17, 2026", "items": ["Back to the code-drawn climber, rebuilt rounder and cleaner (cut-out version scrapped)."]}, {"v": "v.6", "d": "Nov 17, 2026", "items": ["Tried a climber cut out of the pose sheet (scrapped)."]}, {"v": "v.5", "d": "Nov 17, 2026", "items": ["Every treasure is random; rare and legendary finds get big celebrations.", "Shareable preview link."]}, {"v": "v.4", "d": "Nov 17, 2026", "items": ["Climber poses based on the reference sheet: base camp, reach, push, clip, pause, caught."]}, {"v": "v.3", "d": "Nov 17, 2026", "items": ["Elbows bend the right way.", "Slower climb, treasures on ledges to collect, trophy case.", "Right-hand bar shows progress to the next checkpoint."]}, {"v": "v.2", "d": "Nov 17, 2026", "items": ["Close-up side view: cliff on the left, full-size climber in the middle, no summit.", "Gear-up at base camp, checkpoints, look-then-fall when it’s loud.", "Microphone choice and calibration; zones and scenery as you climb."]}, {"v": "v.1", "d": "Nov 17, 2026", "items": ["First build: classes race up a mountain trail; quiet moves the climber up, noise brings wind.", "Teacher name in the title, volume goals, practice mode."]}];
+const CHANGELOG=[{"v": "v.31", "d": "Nov 17, 2026", "items": ["Teacher bonus points: click the ★ points badge for +5, +10 or +25, live while the game runs; click anywhere else to close.","Mini window: pops the climb into a small always-on-top window so you can use other tabs while it keeps running (Chrome or Edge)."]},{"v": "v.30", "d": "Nov 17, 2026", "items": ["Customize the mountain (Settings): school name, messages for every class or one class, and kids’ names.","Messages appear on the cliff as wooden signs, nailed banners or words carved into the rock.","Banner planes can cheer for your school.","Dev menu: Custom sign button."]},{"v": "v.29", "d": "Nov 17, 2026", "items": ["The race chip fades in when something changes, stays about 8 seconds, then fades out and pops back now and then (every 20 s when a class is close, otherwise every 45 s).","The chip wraps onto two lines so it never covers the climber."]},{"v": "v.28", "d": "Nov 17, 2026", "items": ["Chip now says “Another class is higher up the mountain… let’s try to catch them!”"]},{"v": "v.27", "d": "Nov 17, 2026", "items": ["Version history in Settings (this list); click the version stamp to open it."]}, {"v": "v.26", "d": "Nov 17, 2026", "items": ["“Next to beat” chip under the points: names the class ahead only within 100 ft, warns when a class is close behind, shows when you’re in the lead.", "Leaderboard hidden by default (Settings → Leaderboard to show it).", "Rival flags on the cliff show ??? until you’re close.", "End of the week reveals the full final standings with medals."]}, {"v": "v.25", "d": "Nov 17, 2026", "items": ["Staying loud drains 1 point every 2 seconds.", "Red “points lost” bar and shaking points box so kids can see points slipping away.", "Bigger red and green point pop-ups."]}, {"v": "v.24", "d": "Nov 17, 2026", "items": ["Fixed the points counter flickering back and forth."]}, {"v": "v.23", "d": "Nov 17, 2026", "items": ["Live points score: 1 per foot, 10 per checkpoint, treasure points, plus quiet %.", "Trophy case points: common 5, rare 20, legendary 100.", "Points lost for warnings and falls."]}, {"v": "v.22", "d": "Nov 17, 2026", "items": ["Developer menu in Settings (PIN): jump to a height and play any animation on demand."]}, {"v": "v.21", "d": "Nov 17, 2026", "items": ["Tough falls max out at 3 checkpoints (never back to base camp) and trigger at lower noise.", "If it gets louder while he’s hanging, he slips further, live."]}, {"v": "v.20", "d": "Nov 17, 2026", "items": ["Skydivers in the background: freefall, then parachutes, sometimes in groups."]}, {"v": "v.19", "d": "Nov 17, 2026", "items": ["Height-fact banners switch between feet and metres."]}, {"v": "v.18", "d": "Nov 17, 2026", "items": ["Heights shown in feet by default, with a Feet / Metres setting."]}, {"v": "v.17", "d": "Nov 17, 2026", "items": ["Birds near and far (eagles, geese, gulls), small planes with banners, very rare silly flybys."]}, {"v": "v.16", "d": "Nov 17, 2026", "items": ["Climber flails and swings while hanging until the room is quiet.", "Rare treasures fly in; legendary ones hide in a hole in the rock.", "The cliff changes colour and shape every 100 m, with a mist band and label.", "Falling pebbles and drifting leaves."]}, {"v": "v.15", "d": "Nov 17, 2026", "items": ["Trophy case keeps the total a mystery and counts Common, Rare and Legendary in matching colours."]}, {"v": "v.14", "d": "Nov 17, 2026", "items": ["Progress saves automatically and survives reloads and updates; backup file save and load.", "Carabiner clip at every checkpoint is a clear three-step moment.", "Louder noise means bigger falls (several levels)."]}, {"v": "v.13", "d": "Nov 17, 2026", "items": ["Clear microphone messages and a Try again button, no reload needed."]}, {"v": "v.12", "d": "Nov 17, 2026", "items": ["Faster climb speeds: Slow, Normal, Fast and a new Turbo."]}, {"v": "v.11", "d": "Nov 17, 2026", "items": ["Version stamp next to the class picker."]}, {"v": "v.10", "d": "Nov 17, 2026", "items": ["100 real-world height achievements pop up as banners with fun facts."]}, {"v": "v.9", "d": "Nov 17, 2026", "items": ["Mountaineering boots with crampon spikes.", "Rock chips, sparks and dust on every axe hit, handhold and step."]}, {"v": "v.8", "d": "Nov 17, 2026", "items": ["Game put on GitHub so it can have a live link with the microphone."]}, {"v": "v.7", "d": "Nov 17, 2026", "items": ["Back to the code-drawn climber, rebuilt rounder and cleaner (cut-out version scrapped)."]}, {"v": "v.6", "d": "Nov 17, 2026", "items": ["Tried a climber cut out of the pose sheet (scrapped)."]}, {"v": "v.5", "d": "Nov 17, 2026", "items": ["Every treasure is random; rare and legendary finds get big celebrations.", "Shareable preview link."]}, {"v": "v.4", "d": "Nov 17, 2026", "items": ["Climber poses based on the reference sheet: base camp, reach, push, clip, pause, caught."]}, {"v": "v.3", "d": "Nov 17, 2026", "items": ["Elbows bend the right way.", "Slower climb, treasures on ledges to collect, trophy case.", "Right-hand bar shows progress to the next checkpoint."]}, {"v": "v.2", "d": "Nov 17, 2026", "items": ["Close-up side view: cliff on the left, full-size climber in the middle, no summit.", "Gear-up at base camp, checkpoints, look-then-fall when it’s loud.", "Microphone choice and calibration; zones and scenery as you climb."]}, {"v": "v.1", "d": "Nov 17, 2026", "items": ["First build: classes race up a mountain trail; quiet moves the climber up, noise brings wind.", "Teacher name in the title, volume goals, practice mode."]}];
 const FT=3.28084;
 // Show a banner's numbers in the chosen unit. Where the original measurement was in feet, the exact source figure is used.
 function bannerText(a){
@@ -1215,7 +1222,7 @@ function tick(){
 const TPTS=[5,20,100];
 function trophyPts(c){let p=0;for(const f of FINDS)p+=(c.finds[f.id]||0)*TPTS[TIER(f.r)];return p}
 function quietPct(c){return c.total>30?Math.round(c.quiet/c.total*100):0}
-function points(c){return Math.max(0,Math.floor(c.alt*FT)+10*Math.floor(c.alt/ANCHOR+1e-9)+trophyPts(c)+quietPct(c)-(c.pen||0))}
+function points(c){return Math.max(0,Math.floor(c.alt*FT)+10*Math.floor(c.alt/ANCHOR+1e-9)+trophyPts(c)+quietPct(c)+(c.bonus||0)-(c.pen||0))}
 let spellLost=0, spellQuiet=0, drainT=0, loudNow=false;
 function lose(n){if(n>0){spellLost+=n;spellQuiet=0}}
 function penalize(c,n){c.pen=(c.pen||0)+n;flashDelta(-n);lose(n)}
@@ -1288,8 +1295,9 @@ function frame(){
   if(bannerT>0){bannerT-=dt;if(bannerT<=0)$('#banner').classList.remove('show')}
   else if(bannerQ.length&&toastT<=0){const a=bannerQ.shift();$('#bM').textContent=H_(a.m);$('#bT').textContent=bannerText(a);$('#bF').textContent=a.title+' · '+a.loc;$('#banner').classList.add('show');bannerT=8;burst(W/2,H*.22,a.id==='mount-everest'?240:70);if(a.id==='mount-everest')flash=1}
   boardT+=dt;if(boardT>1){boardT=0;renderBoard()}
-  requestAnimationFrame(frame);
-}
+  }
+let rafGen=0;
+function startLoop(){const gn=++rafGen;const step=()=>{if(gn!==rafGen)return;frame();(pipWin||window).requestAnimationFrame(step)};(pipWin||window).requestAnimationFrame(step)}
 function gearBubble(c){
   if(sillySaw>0&&running&&mode==='climb')return 'Did anyone else see that?!';
   if(!running){return c.alt<=0&&mode==='idle'&&!geared.has(c.id)?'Ready when you are!':''}
@@ -1396,6 +1404,37 @@ $('#devPanel').addEventListener('click',e=>{
   else if(k2==='pebbles')pebT=0;
   else if(k2==='sign'){const pool=decoPool(c),n=Math.floor((c.alt-.4)/SLOT),st=['sign','banner','carved'][Math.floor(Math.random()*3)];decoForce={id:c.id,n,text:pool.length?pool[Math.floor(Math.random()*pool.length)]:(S.deco&&S.deco.school?'GO '+S.deco.school.toUpperCase()+'!':'Add messages in Customize the mountain'),style:st,y:HIP0+(c.alt-.4)*U,col:PAL[Math.floor(Math.random()*PAL.length)]}}
 });
+/* ---------- teacher bonus points: click the ★ points badge (works live, no pause) ---------- */
+let awardT=0;
+function closeAward(){$('#award').hidden=true}
+$('#ptsBox').addEventListener('click',e=>{e.stopPropagation();const a=$('#award');a.hidden=!a.hidden;awardT=8});
+$('#award').addEventListener('click',e=>{e.stopPropagation();const n=+e.target.closest('button')?.dataset.aw;if(!n)return;const c=cur();
+  c.bonus=(c.bonus||0)+n;flashDelta(n);const r=$('#ptsBox').getBoundingClientRect(),sr=$('#scene').getBoundingClientRect();burst(r.left-sr.left+r.width/2,r.top-sr.top,n>=25?140:n>=10?80:40);
+  toast('⭐',`+${n} bonus points!`,'From your teacher',`Great job, ${c.name}!`,n>=25?2:1);awardT=8;save()});
+function outsideAward(e){if(!$('#award').hidden&&!e.target.closest('#award,#ptsBox'))closeAward()}
+document.addEventListener('pointerdown',outsideAward);
+setInterval(()=>{if(awardT>0&&(awardT-=1)<=0)closeAward()},1000);
+/* ---------- mini window (Document Picture-in-Picture, Chrome/Edge) ---------- */
+async function openPip(){
+  if(pipWin){pipWin.close();return}
+  if(!('documentPictureInPicture' in window)){toast('🪟','Mini window needs Chrome or Edge','Not supported here','Open the game in a recent Chrome or Edge, from the GitHub link or the downloaded file.',0);return}
+  try{
+    const sc=$('#scene'),r=sc.getBoundingClientRect();
+    pipWin=await documentPictureInPicture.requestWindow({width:Math.round(Math.min(560,r.width*.5)),height:Math.round(Math.min(380,r.width*.5*r.height/r.width))});
+    const d=pipWin.document;
+    document.querySelectorAll('style,link[rel=stylesheet]').forEach(n=>d.head.appendChild(n.cloneNode(true)));
+    d.title='Quiet Climb';d.body.style.cssText='margin:0;background:#8fd0ff;overflow:hidden';
+    sc.dataset.ph='1';const ph=document.createElement('div');ph.id='pipPh';ph.className='scene';ph.style.cssText='display:grid;place-items:center;color:#1c2536;font:600 22px Fredoka,sans-serif;text-align:center;padding:20px';ph.innerHTML='The climb is playing in the mini window.<br><button class="btn" id="pipBack" style="margin-top:14px">Bring it back</button>';
+    sc.after(ph);ph.querySelector('#pipBack').onclick=()=>pipWin&&pipWin.close();
+    d.body.appendChild(sc);sc.style.cssText='height:100vh;min-height:0;border-radius:0;box-shadow:none';
+    d.addEventListener('pointerdown',outsideAward);
+    // keep the game running at full speed even when this tab is in the background
+    clearInterval(tickId);tickId=pipWin.setInterval(tick,100);startLoop();fit();pipWin.addEventListener('resize',fit);
+    $('#pipBtn').textContent='Close mini window';
+    pipWin.addEventListener('pagehide',()=>{const p2=document.getElementById('pipPh');sc.style.cssText='';p2.replaceWith(sc);clearInterval(tickId);pipWin=null;tickId=setInterval(tick,100);startLoop();$('#pipBtn').textContent='Mini window';setTimeout(fit,50)});
+  }catch(e){pipWin=null;toast('🪟',"Couldn't open the mini window",'Try again',String(e.message||e).slice(0,80),0)}
+}
+$('#pipBtn').onclick=openPip;
 function switchClass(id){shownPts=null;stop();S.active=id;sessT=sessQ=0;nextFind=rnd(150,360);const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;renderAll();save()}
 $('#classSel').onchange=e=>switchClass(e.target.value);
 $('#fsBtn').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
@@ -1474,7 +1513,7 @@ twoStep($('#weekBtn'),'End the week and crown a winner',()=>{
   stop();const ranked=[...S.classes].sort((x,y)=>y.alt-x.alt),top=ranked[0];
   $('#celeList').innerHTML=ranked.map((c,i)=>`<li><span class="rk">${['🥇','🥈','🥉'][i]||i+1}</span><span class="sw" style="background:${c.color}"></span><span>${esc(c.name)}<br><small style="color:var(--soft)">★ ${points(c).toLocaleString()} pts</small></span><span>${H_(c.alt)}</span></li>`).join('');
   if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${H_(top.alt)}. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
-  S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};c.pen=0;delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
+  S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};c.pen=0;c.bonus=0;delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
 });
 twoStep($('#resetBtn'),'Reset all climbs to base camp',()=>{stop();S.classes.forEach(c=>{c.alt=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save()});
 twoStep($('#wipeBtn'),'Erase everything',()=>{stop();S=fresh();geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;openSet();renderAll();save()});
@@ -1509,8 +1548,8 @@ document.addEventListener('visibilitychange',save);
 fit();
 {const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25}
 renderAll();
-setInterval(tick,100);
-requestAnimationFrame(frame);
+let tickId=setInterval(tick,100);
+startLoop();
 if(!S.teacher)openSet();
 {let blocked=!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);try{if(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))blocked=true}catch(e){}
  if(blocked){$('#micMsg span').textContent=micHelp()+" Or try practice mode and hold Space to make noise.";$('#micRetry').style.display='none';$('#micMsg').classList.add('show')}}
