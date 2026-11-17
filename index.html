@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.13">
+<meta name="version" content="v.14">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -48,6 +48,7 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .bar{position:relative;flex:1;height:14px;border-radius:999px;background:#e3eaf4;overflow:hidden}
 .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--calm);border-radius:999px;transition:background .6s}
 .over .fill{background:var(--storm)}
+.tier{position:absolute;top:-2px;bottom:-2px;width:3px;border-radius:2px;opacity:.85}#tier0{background:#e9a23b}#tier1{background:#e0602a}#tier2{background:#b8202a}
 .goal{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px}
 .banner{position:absolute;left:50%;top:16px;transform:translate(-50%,-30px) scale(.9);opacity:0;transition:opacity .5s,transform .6s cubic-bezier(.2,1.4,.4,1);display:flex;align-items:center;gap:18px;padding:16px 26px 16px 18px;border-radius:18px;background:linear-gradient(#fff6d8,#ffe9a8);border:3px solid #e9b949;box-shadow:0 14px 34px rgba(0,0,0,.25);z-index:6;width:min(640px,calc(100% - 40px));pointer-events:none}
 .banner.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -124,7 +125,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.13</span>
+      <span class="ver" title="Quiet Climb version">v.14</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -140,12 +141,12 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
       <div class="toast" id="toast"><span class="em" id="tEm"></span><span><small id="tR"></small><b id="tN"></b><small id="tW"></small></span></div>
       <div class="mustard" id="micMsg"><span>The microphone isn't available. Allow mic access in the browser's address bar, or try practice mode.</span><button class="btn" id="micRetry">Try again</button><button class="btn" id="micPractice">Try practice mode</button></div>
-      <div class="meter" id="meter"><span>Voice level</span><div class="bar"><div class="fill" id="fill"></div><div class="goal" id="goalMark"></div></div><span id="goalName"></span></div>
+      <div class="meter" id="meter"><span>Voice level</span><div class="bar"><div class="fill" id="fill"></div><div class="goal" id="goalMark"></div><div class="tier" id="tier0"></div><div class="tier" id="tier1"></div><div class="tier" id="tier2"></div></div><span id="goalName"></span></div>
     </section>
     <aside>
       <div class="card">
         <button class="btn primary go" id="goBtn">Start climbing</button>
-        <button class="btn noise" id="noiseBtn">Hold to make noise (or Space)</button>
+        <button class="btn noise" id="noiseBtn">Hold to make noise (Space · louder: 2, 3, 4)</button>
         <div class="times"><span>This session <b id="sessT">0:00</b></span><span>Quiet <b id="sessQ">0:00</b></span></div>
       </div>
       <div class="card"><h2>Who's highest this week</h2><ol id="board"></ol></div>
@@ -176,13 +177,20 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <input type="range" class="rng" id="custom" min="10" max="90" step="1" aria-label="Custom volume goal">
     <p class="hint">Short noises like a cough or a dropped pencil are ignored. The climber only reacts when the noise lasts.</p>
 
+    <h4>Falls</h4>
+    <div class="seg" id="fallSeg"></div>
+    <p class="hint">Tough: the louder it gets, the worse the fall. Past the goal line the climber slips to the last checkpoint. Past the orange line he drops two checkpoints. Past the red line he also loses a treasure. Past the dark red line he falls all the way back to base camp. Gentle: every fall is just to the last checkpoint.</p>
     <h4>Climbing</h4>
     <label class="lb">Climb speed</label>
     <div class="seg" id="paceSeg"></div>
     <p class="hint">Metres climbed per minute of quiet work. A checkpoint is clipped every 10 m, and a ledge with something to collect turns up every couple of minutes.</p>
 
+    <h4>Saved progress</h4>
+    <p class="hint">Every class's height, trophies and wins save automatically in this browser and survive reloads and updates. Progress is kept per web address, so use the same link on the classroom computer every time. Save a backup file now and then to be extra safe, or to move to another computer.</p>
+    <div class="calrow"><button class="btn" id="exportBtn">Save backup file</button><label class="btn" for="importFile" style="display:inline-flex;align-items:center">Load backup file</label><input type="file" id="importFile" accept=".json,application/json" hidden><span class="calmsg" id="bakMsg"></span></div>
     <div class="danger">
       <button class="btn" id="practiceBtn">Practice mode</button>
+      <button class="btn warn" id="resetBtn">Reset all climbs to base camp</button>
       <button class="btn warn" id="weekBtn">End the week and crown a winner</button>
       <button class="btn warn" id="wipeBtn">Erase everything</button>
     </div>
@@ -235,10 +243,26 @@ let lastPose=null, fromPose=null, blend=1, poseMode='', mtV=0, vMode='', grab=nu
 let W=0, H=0, k=1, EB=0, time=0, birds=[], birdT=4;
 const flakes = Array.from({length:160},()=>({x:Math.random(),y:Math.random(),r:rnd(1,3),s:rnd(.6,1.4)}));
 
-function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:''}}
+function fresh(){return{teacher:'',classes:[mk('Homeroom',0)],active:null,goal:'independent',custom:50,pace:'normal',cal:null,micId:'',falls:'tough'}}
 function mk(name,i){return{id:'c'+Math.random().toString(36).slice(2,9),name,color:PAL[i%PAL.length],alt:0,best:0,quiet:0,total:0,finds:{},wins:0,zone:0,got:{}}}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(!s||!s.classes||!s.classes.length)return null;if(!PACE[s.pace])s.pace='normal';s.classes.forEach(c=>{c.got=c.got||{};c.finds=c.finds||{};if(!c.ach){c.ach={};for(const a of ACHIEVEMENTS)if(c.alt>=a.m)c.ach[a.id]=1}});return s}catch(e){return null}}
-function save(){if(practice)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+// Progress is kept in this browser's local storage under one fixed name that never changes between versions.
+// Every save first copies the previous save aside, so a bad write can always be rolled back.
+function parseSave(txt){try{const s=JSON.parse(txt);return s&&s.classes&&s.classes.length?s:null}catch(e){return null}}
+function upgrade(s){
+  if(!PACE[s.pace])s.pace='normal';
+  if(!s.falls)s.falls='tough';
+  s.classes.forEach(c=>{c.alt=+c.alt||0;c.got=c.got||{};c.finds=c.finds||{};c.wins=c.wins||0;if(!c.ach){c.ach={};for(const a of ACHIEVEMENTS)if(c.alt>=a.m)c.ach[a.id]=1}});
+  return s;
+}
+function load(){
+  let s=null;
+  try{s=parseSave(localStorage.getItem(KEY))||parseSave(localStorage.getItem(KEY+'.prev'))||parseSave(localStorage.getItem('quietclimb.v1'))}catch(e){}
+  return s?upgrade(s):null;
+}
+function save(){
+  if(practice)return;
+  try{const old=localStorage.getItem(KEY),now=JSON.stringify(S);if(old&&old!==now&&parseSave(old))localStorage.setItem(KEY+'.prev',old);localStorage.setItem(KEY,now)}catch(e){}
+}
 function rnd(a,b){return a+Math.random()*(b-a)}
 function hh(n){const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s)}
 function h2(i,j){return hh(i*57.31+j*113.17)}
@@ -356,12 +380,16 @@ function computePose(c){
   }
   const P=climbPose(hy,0,0,mode==='clip');
   if(mode==='clip'){
-    const t=mtV/2.4, hold=P.rh, harn=[P.hip[0]-6,P.hip[1]+4], b=[ex(hy+40)+8,hy+40];
+    // CLIP: unclip a carabiner from the harness, hold it up, tap the bolt in twice, snap the rope in
+    const t=mtV/3, hold=P.rh, harn=[P.hip[0]-4,P.hip[1]+2], b=[ex(hy+40)+10,hy+40], show=[P.sh[0]+4,P.sh[1]+18];
     let tg=hold;
-    if(t<.35)tg=mixA(hold,harn,ease(t/.35));
-    else if(t<.7)tg=mixA(harn,b,ease((t-.35)/.35));
-    else tg=mixA(b,hold,ease((t-.7)/.3));
+    if(t<.18)tg=mixA(hold,harn,ease(t/.18));
+    else if(t<.32)tg=mixA(harn,show,ease((t-.18)/.14));
+    else if(t<.45)tg=mixA(show,b,ease((t-.32)/.13));
+    else if(t<.72){const tap=Math.abs(Math.sin((t-.45)/.27*Math.PI*2));tg=[b[0]+8*tap,b[1]+3*tap]}
+    else tg=mixA(b,hold,ease((t-.72)/.28));
     setLimb(P,'rh',P.sh,tg,1);
+    P.biner=t>.16&&t<.74?1:0; if(t>.4&&t<.72)P.face=0;
   }
   return P;
 }
@@ -437,6 +465,8 @@ function drawClimber(P,c,G){
   {const cuff=mixA(P.rhm,P.rh,.86);dotW(cuff,8.6,jkD)}
   if(G.axe>0)drawAxe(P.rhm,P.rh,G.axe);
   glove(P.rhm,P.rh,0);
+  if(P.biner){const h=S2(P.rh);g.strokeStyle='#e04e1a';g.lineWidth=3.4*k;g.beginPath();g.ellipse(h[0]-6*k,h[1]-12*k,6*k,11*k,-.35,0,7);g.stroke();
+    g.strokeStyle='#ffb08a';g.lineWidth=1.4*k;g.beginPath();g.ellipse(h[0]-6*k,h[1]-12*k,6*k,11*k,-.35,3.6,5.2);g.stroke()}
 }
 function legLoop(hip,knee,col){const p=mixA(hip,knee,.24),dx=knee[0]-hip[0],dy=knee[1]-hip[1],L=Math.hypot(dx,dy)||1,u=[dx/L,dy/L],v=[-u[1],u[0]];
   polyW([[p[0]+v[0]*14,p[1]+v[1]*14],[p[0]+v[0]*14+u[0]*5,p[1]+v[1]*14+u[1]*5],[p[0]-v[0]*14+u[0]*5,p[1]-v[1]*14+u[1]*5],[p[0]-v[0]*14,p[1]-v[1]*14]],col)}
@@ -691,6 +721,11 @@ function drawConfetti(dt){
   conf=conf.filter(p=>p.y<H+30);
   if(flash>0){g.fillStyle=`rgba(255,240,180,${flash*.55})`;g.fillRect(0,0,W,H);flash=Math.max(0,flash-dt*1.4)}
 }
+function drawLost(dt,P){
+  if(!lostItem)return; lostItem.t+=dt; const t=lostItem.t, p=S2(P.hip), x=p[0]+60*k+t*40*k, y=p[1]-20*k+t*t*900*k;
+  if(y>H+60){lostItem=null;return}
+  g.save();g.translate(x,y);g.rotate(t*5);g.font=`${Math.max(28,30*k)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(lostItem.f.e,0,0);g.restore();
+}
 function drawFly(dt,c,P){
   if(mode==='grab'&&grab&&!grab.flew&&mtV/1.6>=.5){grab.flew=1;const p=S2(P.rh);fly={e:grab.f.e,x:p[0],y:p[1],t:0};
     const got=FINDS.filter(f=>c.finds[f.id]).length;
@@ -713,7 +748,7 @@ function drawGround(){
   g.fillStyle='#fff';g.font=`600 ${Math.max(11,13*k)}px Fredoka, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('Base camp',sg[0],sg[1]-63*k);
 }
 function drawRope(P,c){
-  const nTop=Math.floor(c.alt/ANCHOR+1e-9), show=mode==='clip'&&mtV<1.9?nTop-1:nTop;
+  const nTop=Math.floor(c.alt/ANCHOR+1e-9), show=mode==='clip'&&mtV<1.7?nTop-1:nTop;
   const bot=camY-H*.5/k-200, pts=[];
   const lo=Math.max(1,Math.floor((bot-HIP0)/(ANCHOR*U)));
   if(lo<=1)pts.push([ex(0)+40,0]);else pts.push([ex(boltY(lo-1))+8,boltY(lo-1)]);
@@ -726,9 +761,9 @@ function drawRope(P,c){
   path();g.strokeStyle='#c98a00';g.lineWidth=4.2*k;g.stroke();path();g.strokeStyle='#f4b400';g.lineWidth=2.6*k;g.stroke();
   for(let n=lo;n<=show;n++){const y=boltY(n),p=S2([ex(y)+3,y]);hexS(p[0],p[1],5*k,'#5d6577');
     g.strokeStyle='#e04e1a';g.lineWidth=2.6*k;g.beginPath();g.ellipse(p[0]+5*k,p[1]+7*k,3.6*k,7*k,-.4,0,7);g.stroke()}
-  if(mode==='clip'&&mtV>1.7&&!cyc.clipped){cyc.clipped=1;const y=boltY(nTop);chips([ex(y)+6,y],4,1,css(wallBase((y-HIP0)/U),.1));sparks([ex(y)+6,y],5)}
+  if(mode==='clip'){const y=boltY(nTop),bp=[ex(y)+6,y],rc=css(wallBase((y-HIP0)/U),.1);for(const [i,tt] of [[1,1.5],[2,1.85],[3,2.15]])if(mtV>tt&&(cyc.clipped||0)<i){cyc.clipped=i;chips(bp,i===3?3:5,1,rc);sparks(bp,i===3?8:4);if(i<3)dust(bp,2,css(wallBase((y-HIP0)/U),.45))}}
   if(mode!=='clip')cyc.clipped=0;
-  if(mode==='clip'&&mtV>1.7&&mtV<2.4){const y=boltY(nTop),p=S2([ex(y)+6,y]);g.strokeStyle=`rgba(255,255,255,${1-(mtV-1.7)/.7})`;g.lineWidth=3*k;for(let i=0;i<8;i++){const a=i*Math.PI/4,r1=10*k,r2=(16+(mtV-1.7)*30)*k;g.beginPath();g.moveTo(p[0]+Math.cos(a)*r1,p[1]+Math.sin(a)*r1);g.lineTo(p[0]+Math.cos(a)*r2,p[1]+Math.sin(a)*r2);g.stroke()}}
+  if(mode==='clip'&&mtV>2.15&&mtV<2.85){const y=boltY(nTop),p=S2([ex(y)+6,y]);g.strokeStyle=`rgba(255,255,255,${1-(mtV-2.15)/.7})`;g.lineWidth=3*k;for(let i=0;i<8;i++){const a=i*Math.PI/4,r1=10*k,r2=(16+(mtV-2.15)*30)*k;g.beginPath();g.moveTo(p[0]+Math.cos(a)*r1,p[1]+Math.sin(a)*r1);g.lineTo(p[0]+Math.cos(a)*r2,p[1]+Math.sin(a)*r2);g.stroke()}}
 }
 function drawRivals(c){
   for(const o of S.classes){if(o.id===c.id||o.alt<=0)continue;
@@ -789,7 +824,7 @@ async function listMics(){
     $('#micSel').innerHTML='<option value="">Computer\'s default microphone</option>'+ds.filter(d=>d.deviceId&&d.deviceId!=='default').map((d,i)=>`<option value="${esc(d.deviceId)}"${d.deviceId===S.micId?' selected':''}>${esc(d.label||'Microphone '+(i+1))}</option>`).join('')}catch(e){}
 }
 function readLevel(){
-  if(practice)return held?rnd(72,85):rnd(10,22);
+  if(practice)return held?Math.min(99,held+rnd(-1.5,1.5)):rnd(10,22);
   if(!an)return 0;
   an.getFloatTimeDomainData(buf);let s=0;for(let i=0;i<buf.length;i++)s+=buf[i]*buf[i];
   return Math.max(0,Math.min(100,(20*Math.log10(Math.sqrt(s/buf.length)+1e-8)+65)*100/55));
@@ -798,12 +833,24 @@ function readLevel(){
 /* ---------- game logic ---------- */
 function setMode(m){mode=m;mt=0;if(m==='climb'){fall=null}}
 function toast(e,title,sub,small,r=0){toastQ.push({e,title,sub,small,r})}
-function doFall(c){
-  const n=Math.floor(c.alt/ANCHOR+1e-9), ground=n===0;
-  c.alt=n*ANCHOR;
-  const by=boltY(n);
-  fall={ground,rest:ground?HIP0:by-74,vy:0,caught:false,bolt:[ex(by)+8,by],t:0};
-  setMode('fall');
+// How loud it got decides how bad the fall is: 1 slip to the last checkpoint, 2 down two checkpoints,
+// 3 down two checkpoints and a treasure drops out of the pack, 4 all the way back to base camp.
+const TIERS=[.33,.55,.8];
+function tierLine(i){const g=goalVal();return g+(100-g)*TIERS[i]}
+function tierOf(v){return v>tierLine(2)?4:v>tierLine(1)?3:v>tierLine(0)?2:1}
+let peak=0, lostItem=null;
+function doFall(c,tier){
+  if(S.falls==='gentle')tier=1;
+  const n0=Math.floor(c.alt/ANCHOR+1e-9), n=tier>=4?0:tier>=2?Math.max(0,n0-1):n0, ground=n===0;
+  c.alt=n*ANCHOR; c.zone=Math.min(c.zone||0,zoneIdx(c.alt));
+  const by=boltY(n), rest=ground?HIP0:by-74;
+  if(dispY-rest>2600)dispY=rest+2600;  // long falls: skip ahead so the drop stays short and dramatic
+  fall={ground,rest,vy:0,caught:false,bolt:[ex(by)+8,by],t:0,tier};
+  lostItem=null;
+  if(tier===3){const owned=FINDS.filter(f=>c.finds[f.id]>0);if(owned.length){const f=owned[Math.floor(Math.random()*owned.length)];c.finds[f.id]--;if(!c.finds[f.id])delete c.finds[f.id];lostItem={f,t:0};renderFinds();toast(f.e,`Dropped the ${f.n}!`,'Lost from the trophy case',`It fell all the way down. ${c.name} can find another one.`,0)}}
+  if(tier===4)toast('🏕️','Back to base camp!','Way too loud',`${c.name} starts the climb again from the bottom.`,0);
+  else if(tier===2&&n<n0)toast('⬇️','Down two checkpoints!','Too loud',`${c.name} slipped past the last checkpoint.`,0);
+  setMode('fall');save();
 }
 function quietAdd(c,d){
   c.quiet+=d;sessQ+=d;
@@ -816,7 +863,7 @@ function tick(){
   $('#sFill').style.width=smooth+'%';$('#sGoal').style.left=gv+'%';
   if(calib)calibStep(dt);
   if(running){
-    if(over){overT+=dt;calmT=0}else{overT=Math.max(0,overT-dt*1.5);calmT+=dt}
+    if(over){overT+=dt;calmT=0;peak=Math.max(peak,smooth)}else{overT=Math.max(0,overT-dt*1.5);calmT+=dt;if(overT===0)peak=0}
     const c=cur(), sp=practice?6:1, was=c.alt; mt+=dt;
     c.total+=dt*sp; sessT+=dt*sp;
     switch(mode){
@@ -831,8 +878,8 @@ function tick(){
         if(na>=b*ANCHOR){na=b*ANCHOR;setMode('clip')}
         c.alt=na; quietAdd(c,dt*sp); break;}
       case 'grab': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>1.6)setMode('climb'); break;
-      case 'clip': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>2.4)setMode('climb'); break;
-      case 'look': if(overT>2.2)doFall(c); else if(overT<.1)setMode('climb'); break;
+      case 'clip': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>3)setMode('climb'); break;
+      case 'look': if(overT>2.2){doFall(c,tierOf(peak));peak=0} else if(overT<.1){setMode('climb');peak=0} break;
       case 'fall': if(mt>2.2)setMode('hang'); break;
       case 'hang': if(calmT>3)setMode('recover'); break;
       case 'recover': if(mt>1.8)setMode('climb'); break;
@@ -841,7 +888,7 @@ function tick(){
     c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(c.alt>=a.m&&!c.ach[a.id]){c.ach[a.id]=1;bannerQ.push(a);save()}
     const z=zoneIdx(c.alt); if(z>(c.zone||0)){c.zone=z;if(ZONES[z][0]!==8849)toast(ZONES[z][2],ZONES[z][1],'New zone reached!',`${c.name} made it to ${ZONES[z][0].toLocaleString()} m`,z>=5?2:1)}
     for(const o of S.classes)if(o!==c&&o.alt>1&&was<o.alt&&c.alt>=o.alt)toast('🚩',`Passed ${o.name}!`,'Overtake!',`${c.name} is now higher`,1);
-    saveT+=dt; if(saveT>5){saveT=0;save()}
+    saveT+=dt; if(saveT>2){saveT=0;save()}
   }
   $('#sessT').textContent=fmt(sessT);$('#sessQ').textContent=fmt(sessQ);
   hud();
@@ -852,7 +899,7 @@ function hud(){
   $('#zoneV').textContent=ZONES[zoneIdx(c.alt)][1];
   const to=ANCHOR-(c.alt%ANCHOR);
   $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${Math.ceil(to-1e-6)} m`;
-  const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:'Found something!',look:'Uh oh… the climber can hear you!',fall:'Whoa! Fell to the last checkpoint',hang:'Get quiet to start climbing again',recover:'Back to climbing!'};
+  const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:'Found something!',look:'Uh oh… the climber can hear you!',fall:['','Slipped to the last checkpoint','Big fall! Down two checkpoints','Big fall, and a treasure dropped!','All the way back to base camp!'][fall?fall.tier||1:1],hang:'Get quiet to start climbing again',recover:'Back to climbing!'};
   $('#stText').textContent=running?T[mode]:T.idle;
   $('#status').className='status '+(!running?'':['look','fall','hang'].includes(mode)?'holding':'climbing');
 }
@@ -893,7 +940,7 @@ function frame(){
     drawSky(m);drawClouds(false);drawBirds(dt,m);drawWall(m);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
     if(G.rope>0||c.alt>0)drawRope(P,c);
     plantFX(P,m);
-    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawClouds(true);drawConfetti(dt);drawSnow(dt,m);
+    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawLost(dt,P);drawClouds(true);drawConfetti(dt);drawSnow(dt,m);
     const hd=S2(P.head), bt=gearBubble(c);
     if(bt)bubble(hd[0],hd[1]-30*k,bt);
     drawMap(c);
@@ -908,7 +955,7 @@ function frame(){
 function gearBubble(c){
   if(!running){return c.alt<=0&&mode==='idle'&&!geared.has(c.id)?'Ready when you are!':''}
   if(mode==='gear'){const t=mtV;return t<1.4?'Helmet on!':t<2.4?'Harness…':t<3.6?'Carabiners: click, click, click!':t<4.7?'Rope ready!':t<6?'Ice axe!':"Let's climb!"}
-  return {look:'Uh oh… too loud!',fall:fall&&fall.caught?'Oof!':'Whoaaa!',hang:'Shh… quiet, please!',clip:mtV<2?'Click!':'',grab:mtV>.8&&mtV<1.6?(grab&&grab.f.r>=3?'NO WAY!!':grab&&grab.f.r===2?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
+  return {look:'Uh oh… too loud!',fall:fall&&fall.tier>=4?'Nooooo!':fall&&fall.caught?'Oof!':fall&&fall.tier>=2?'Whoaaaaa!!':'Whoaaa!',hang:['','Shh… quiet, please!','That was a big fall…','My treasure!','Back to the start…'][fall?fall.tier||1:1],clip:mtV<1.4?'Carabiner ready…':mtV<2.15?'Tap, tap…':mtV<2.9?'Click! Checkpoint!':'',grab:mtV>.8&&mtV<1.6?(grab&&grab.f.r>=3?'NO WAY!!':grab&&grab.f.r===2?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
 }
 
 /* ---------- panels ---------- */
@@ -926,7 +973,7 @@ function renderFinds(){
 }
 function renderTitle(){const t=titleFor(S.teacher,cur().name);$('#title').textContent=t;document.title=t+' · Quiet Climb'}
 function renderSel(){$('#classSel').innerHTML=S.classes.map(c=>`<option value="${c.id}"${c.id===S.active?' selected':''}>${esc(c.name)}</option>`).join('')}
-function renderGoal(){$('#goalMark').style.left=goalVal()+'%';$('#goalName').textContent='Goal: '+GOALS[S.goal]}
+function renderGoal(){$('#goalMark').style.left=goalVal()+'%';for(let i=0;i<3;i++){const e=$('#tier'+i);e.style.left=tierLine(i)+'%';e.style.display=S.falls==='gentle'?'none':''}$('#goalName').textContent='Goal: '+GOALS[S.goal]}
 function renderAll(){cur();renderTitle();renderSel();renderBoard();renderFinds();renderGoal();hud()}
 
 /* ---------- controls ---------- */
@@ -944,11 +991,12 @@ function switchClass(id){stop();S.active=id;sessT=sessQ=0;nextFind=rnd(150,360);
 $('#classSel').onchange=e=>switchClass(e.target.value);
 $('#fsBtn').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
 const nb=$('#noiseBtn');
-nb.addEventListener('pointerdown',()=>held=true);
+nb.addEventListener('pointerdown',()=>held=goalVal()+6);
 ['pointerup','pointerleave','pointercancel'].forEach(ev=>nb.addEventListener(ev,()=>held=false));
 const typing=e=>/INPUT|SELECT|TEXTAREA/.test(e.target.tagName);
-addEventListener('keydown',e=>{if(e.code==='Space'&&practice&&!typing(e)){held=true;e.preventDefault()}});
-addEventListener('keyup',e=>{if(e.code==='Space'){held=false;if(practice&&!typing(e))e.preventDefault()}});
+// practice: Space = a bit loud, hold 2 / 3 / 4 for the louder levels
+addEventListener('keydown',e=>{if(!practice||typing(e))return;const lv={Space:goalVal()+6,Digit2:tierLine(0)+5,Digit3:tierLine(1)+5,Digit4:tierLine(2)+5}[e.code];if(lv){held=lv;e.preventDefault()}});
+addEventListener('keyup',e=>{if(['Space','Digit2','Digit3','Digit4'].includes(e.code)){held=0;if(practice&&!typing(e))e.preventDefault()}});
 function setPractice(on){
   if(on===practice)return; stop();
   if(on){save();snap=JSON.stringify(S);practice=true}else{practice=false;try{S=JSON.parse(snap)}catch(e){}}
@@ -963,7 +1011,7 @@ $('#celeOk').onclick=()=>$('#cele').classList.remove('show');
 
 /* ---------- settings ---------- */
 function openSet(){
-  $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();$('#custom').value=S.custom;preview();
+  $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();drawFalls();$('#custom').value=S.custom;preview();
   $('#calMsg').textContent=S.cal?`Calibrated (quiet ≈ ${Math.round(S.cal.base)}, talking ≈ ${Math.round(S.cal.talk)})`:'Not calibrated yet';
   if(an)listMics();
   if(!S.cal&&an)$('#calMsg').textContent='Microphone is on. Press Calibrate when the room is ready.';
@@ -986,6 +1034,8 @@ $('#tName').oninput=preview;
 function drawGoals(){$('#goalSeg').innerHTML=Object.entries(GOALS).map(([key,n])=>`<button data-g="${key}" class="${S.goal===key?'on':''}">${n}</button>`).join('');$('#custom').style.display=S.goal==='custom'?'block':'none'}
 $('#goalSeg').onclick=e=>{const key=e.target.dataset.g;if(!key)return;if(key==='custom'&&S.goal!=='custom')S.custom=Math.round(goalVal());S.goal=key;$('#custom').value=S.custom;drawGoals();renderGoal()};
 $('#custom').oninput=e=>{S.custom=+e.target.value;renderGoal()};
+function drawFalls(){$('#fallSeg').innerHTML=[['tough','Tough'],['gentle','Gentle']].map(([key,n])=>`<button data-f="${key}" class="${(S.falls||'tough')===key?'on':''}">${n}</button>`).join('')}
+$('#fallSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.f;if(key){S.falls=key;drawFalls();renderGoal();save()}};
 function drawPace(){$('#paceSeg').innerHTML=Object.entries(PACE).map(([key,[n,v]])=>`<button data-p="${key}" class="${S.pace===key?'on':''}">${n} · ${v} m/min</button>`).join('')}
 $('#paceSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.p;if(key){S.pace=key;drawPace()}};
 $('#micSel').onchange=async e=>{S.micId=e.target.value;await startMic();save()};
@@ -1011,10 +1061,14 @@ twoStep($('#weekBtn'),'End the week and crown a winner',()=>{
   if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${Math.floor(top.alt).toLocaleString()} m. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
   S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
 });
+twoStep($('#resetBtn'),'Reset all climbs to base camp',()=>{stop();S.classes.forEach(c=>{c.alt=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save()});
 twoStep($('#wipeBtn'),'Erase everything',()=>{stop();S=fresh();geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;openSet();renderAll();save()});
 $('#practiceBtn').onclick=()=>{S.teacher=$('#tName').value.trim();setPractice(!practice);$('#setup').classList.remove('show')};
 $('#doneBtn').onclick=()=>{S.teacher=$('#tName').value.trim();$('#setup').classList.remove('show');renderAll();save()};
 $('#setBtn').onclick=openSet;
+$('#exportBtn').onclick=()=>{try{save();const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='quiet-climb-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();$('#bakMsg').textContent='Backup saved to your downloads.'}catch(e){$('#bakMsg').textContent="This copy can't save files. Use the GitHub link or the downloaded file."}};
+$('#importFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;const s2=parseSave(await f.text());if(!s2){$('#bakMsg').textContent="That file isn't a Quiet Climb backup.";return}
+  stop();S=upgrade(s2);geared.clear();for(const key in rolls)delete rolls[key];const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;save();openSet();renderAll();$('#bakMsg').textContent='Backup loaded.';e.target.value=''};
 addEventListener('keydown',e=>{if(e.key==='Escape'){$('#setup').classList.remove('show');$('#cele').classList.remove('show')}});
 addEventListener('beforeunload',save);
 document.addEventListener('visibilitychange',save);
