@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.12">
+<meta name="version" content="v.13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -124,7 +124,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.12</span>
+      <span class="ver" title="Quiet Climb version">v.13</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -139,7 +139,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
       <div class="pbadge">Practice mode — progress isn't saved</div>
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
       <div class="toast" id="toast"><span class="em" id="tEm"></span><span><small id="tR"></small><b id="tN"></b><small id="tW"></small></span></div>
-      <div class="mustard" id="micMsg"><span>The microphone isn't available. Allow mic access in the browser's address bar, or try practice mode.</span><button class="btn" id="micPractice">Try practice mode</button></div>
+      <div class="mustard" id="micMsg"><span>The microphone isn't available. Allow mic access in the browser's address bar, or try practice mode.</span><button class="btn" id="micRetry">Try again</button><button class="btn" id="micPractice">Try practice mode</button></div>
       <div class="meter" id="meter"><span>Voice level</span><div class="bar"><div class="fill" id="fill"></div><div class="goal" id="goalMark"></div></div><span id="goalName"></span></div>
     </section>
     <aside>
@@ -759,7 +759,19 @@ function drawSnow(dt,m){
 }
 
 /* ---------- audio ---------- */
+let micErr='';
+// plain-language reason the microphone didn't start, with the fix
+function micHelp(){
+  let blocked=!window.isSecureContext||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  try{if(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))blocked=true}catch(e){}
+  if(blocked)return "This copy can't use a microphone (the Claude preview link blocks it). Open the GitHub link or the downloaded file in Chrome.";
+  if(micErr==='NotAllowedError'||micErr==='SecurityError')return "Chrome is blocking the microphone for this page. Click the microphone or lock icon at the left end of the address bar, set Microphone to Allow, then press Try again.";
+  if(micErr==='NotFoundError'||micErr==='OverconstrainedError')return "No microphone was found. Plug one in, or choose another under Settings → Which microphone, then press Try again.";
+  if(micErr==='NotReadableError'||micErr==='AbortError')return "Another app is using the microphone (Zoom, Teams, Meet?). Close it, then press Try again.";
+  return "The microphone didn't start. Check it's plugged in and allowed in Chrome, then press Try again.";
+}
 async function startMic(){
+  micErr='';
   try{
     ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
     if(stream)stream.getTracks().forEach(t=>t.stop());
@@ -770,7 +782,7 @@ async function startMic(){
     const src=ctx.createMediaStreamSource(stream);an=ctx.createAnalyser();an.fftSize=2048;src.connect(an);buf=new Float32Array(an.fftSize);
     if(ctx.state==='suspended')await ctx.resume();
     listMics();return true;
-  }catch(e){an=null;return false}
+  }catch(e){an=null;micErr=(e&&e.name)||'Error';return false}
 }
 async function listMics(){
   try{const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput');
@@ -921,7 +933,7 @@ function renderAll(){cur();renderTitle();renderSel();renderBoard();renderFinds()
 function stop(){running=false;if(mode!=='idle')setMode('idle');fall=null;$('#goBtn').textContent='Start climbing';$('#goBtn').classList.remove('pause');save()}
 $('#goBtn').onclick=async()=>{
   if(running){stop();return}
-  if(!practice&&!an){if(!await startMic()){$('#micMsg').classList.add('show');return}}
+  if(!practice&&!an){if(!await startMic()){$('#micMsg span').textContent=micHelp();$('#micMsg').classList.add('show');return}}
   $('#micMsg').classList.remove('show');
   if(ctx&&ctx.state==='suspended')ctx.resume();
   const c=cur(); overT=0;calmT=0;
@@ -946,6 +958,7 @@ function setPractice(on){
   $('#micMsg').classList.remove('show');renderAll();
 }
 $('#micPractice').onclick=()=>setPractice(true);
+$('#micRetry').onclick=async()=>{if(await startMic()){$('#micMsg').classList.remove('show');$('#goBtn').click()}else $('#micMsg span').textContent=micHelp()};
 $('#celeOk').onclick=()=>$('#cele').classList.remove('show');
 
 /* ---------- settings ---------- */
@@ -953,6 +966,7 @@ function openSet(){
   $('#tName').value=S.teacher;drawCList();drawGoals();drawPace();$('#custom').value=S.custom;preview();
   $('#calMsg').textContent=S.cal?`Calibrated (quiet ≈ ${Math.round(S.cal.base)}, talking ≈ ${Math.round(S.cal.talk)})`:'Not calibrated yet';
   if(an)listMics();
+  if(!S.cal&&an)$('#calMsg').textContent='Microphone is on. Press Calibrate when the room is ready.';
   $('#setup').classList.add('show');
 }
 function preview(){$('#preview').textContent=titleFor($('#tName').value,cur().name)}
@@ -977,8 +991,9 @@ $('#paceSeg').onclick=e=>{const key=e.target.closest('button')?.dataset.p;if(key
 $('#micSel').onchange=async e=>{S.micId=e.target.value;await startMic();save()};
 $('#calBtn').onclick=async()=>{
   if(calib)return;
-  if(practice){$('#calMsg').textContent='Leave practice mode to calibrate the real microphone.';return}
-  if(!an&&!await startMic()){$('#calMsg').textContent='Microphone not available. Allow mic access in the browser first.';return}
+  if(practice){setPractice(false);$('#setup').classList.add('show');$('#practiceBtn').textContent='Practice mode'}
+  if(!an&&!await startMic()){$('#calMsg').textContent=micHelp();$('#calBtn').textContent='Try again';return}
+  $('#calBtn').textContent='Calibrate (10 seconds)';
   calib={ph:0,t:0,a:[],b:[]};
 };
 function calibStep(dt){
@@ -1011,7 +1026,7 @@ setInterval(tick,100);
 requestAnimationFrame(frame);
 if(!S.teacher)openSet();
 {let blocked=!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);try{if(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))blocked=true}catch(e){}
- if(blocked){$('#micMsg span').textContent="This shared preview can't use a microphone. Try practice mode and hold Space to make noise. In the classroom, use the downloaded copy.";$('#micMsg').classList.add('show')}}
+ if(blocked){$('#micMsg span').textContent=micHelp()+" Or try practice mode and hold Space to make noise.";$('#micRetry').style.display='none';$('#micMsg').classList.add('show')}}
 if(location.hash==='#debug')window.QC={next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{const c=cur();c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
 }
 </script>
