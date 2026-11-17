@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.15">
+<meta name="version" content="v.16">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -129,7 +129,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.15</span>
+      <span class="ver" title="Quiet Climb version">v.16</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -231,7 +231,7 @@ const FINDS = [
   ['satellite','🛰️','Satellite',2,1500,99999],['rocket','🚀','Rocket',2,1800,99999],['ufo','🛸','UFO',3,1300,99999],['alien','👽','Friendly alien',3,2000,99999]
 ].map(([id,e,n,r,a,b])=>({id,e,n,r,z:[a,b]}));
 const RAR = ['Common find','Rare find!','Rare find!','LEGENDARY find!!'], RW = [60,28,10,2];
-const TIER=r=>r>=3?2:r>=1?1:0, TIERS_UI=[['Common','#f26b3a','#fff1ea'],['Rare','#8b5cf6','#f3eefe'],['Legendary','#d99a00','#fff6d6']];
+const TIER=r=>r>=3?2:r>=1?1:0, GDUR=f=>TIER(f.r)===2?3.4:TIER(f.r)===1?1.9:1.6, TIERS_UI=[['Common','#f26b3a','#fff1ea'],['Rare','#8b5cf6','#f3eefe'],['Legendary','#d99a00','#fff6d6']];
 const ZONES = [[0,'Base camp','🏕️'],[15,'The lower cliffs','🧗'],[60,'Bird nest ledges','🪺'],[150,'Goat crags','🐐'],[300,'The misty heights','🌫️'],[450,'The cloud layer','☁️'],[600,'The snow line','❄️'],[900,'Above the clouds','🌤️'],[1300,'Edge of the sky','✨'],[2000,'Where the stars live','🌌'],[3500,'Almost to space','🚀'],[8849,'Higher than Mount Everest!','🏔️']];
 const GOALS = {silent:'Silent',independent:'Independent',partner:'Partner work',custom:'Custom'};
 const PACE = {slow:['Slow',5],normal:['Normal',10],fast:['Fast',15],turbo:['Turbo',20]};
@@ -292,7 +292,14 @@ function titleFor(t,cn){
   const cls=cn?(/class$/i.test(cn)?cn:cn+' Class'):'Class';
   return t?(/s$/i.test(t)?t+"'":t+"'s")+' '+cls:cls;
 }
-function ex(y){return 10*Math.sin(y*.003)+7*Math.sin(y*.0083+2)}
+// The cliff changes as you climb: a new rock layer every 100 m (then every 250 m above 1,000 m), each with its own colour and shape.
+const STRATA=[[0,'Sandstone base','#8a7462',4,1],[100,'Red rock band','#9c5c47',9,1],[200,'Granite cliffs','#7b7e88',5,0],[300,'Dark basalt','#525668',15,0],[400,'Mossy crags','#5d6d58',7,0],
+  [500,'Blue slate','#56688a',11,1],[600,'Snowy rock','#7e8aa2',6,0],[700,'Glacier ice','#8fa9c6',4,0],[800,'Frozen granite','#7d879c',9,0],[900,'High ice','#a9bfd8',3,0],
+  [1000,'Crystal caves','#7f8fb8',8,0],[1250,'Storm peaks','#5b6178',13,0],[1500,'Moonstone','#8a8aa0',6,1],[1750,'Starlight ice','#9ab4d8',4,0],[2000,'Midnight rock','#3f4560',12,0],[2500,'Aurora ice','#86a6c8',5,0],[3000,'Sky stone','#6e7ba0',9,1],[4000,'Space rock','#4b4d63',14,0]];
+function stratumAt(m){let i=0;while(i+1<STRATA.length&&m>=STRATA[i+1][0])i++;return i}
+function stratBlend(m,f){const i=stratumAt(m),a=STRATA[i],b=STRATA[i+1];if(!b)return f(a);const t=Math.max(0,Math.min(1,(m-(b[0]-8))/8));return t>0?[f(a),f(b),t]:f(a)}
+function ampAt(m){const r=stratBlend(m,s=>s[3]);return Array.isArray(r)?lerp(r[0],r[1],r[2]):r}
+function ex(y){const m=Math.max(0,(y-HIP0)/U);return 10*Math.sin(y*.003)+7*Math.sin(y*.0083+2)+ampAt(m)*Math.sin(y*.0062+1.3)}
 function boltY(n){return HIP0+n*ANCHOR*U+40}
 const sx=x=>EB+x*k, sy=y=>H*.5-(y-camY)*k, S2=p=>[sx(p[0]),sy(p[1])];
 
@@ -350,12 +357,15 @@ function fallPose(hy,t){
   return P;
 }
 // CAUGHT: sitting back in the harness, rope taut to the bolt, legs out toward the wall
+let flail=1;
 function hangPose(hy,bolt){
-  const hx=bolt[0]+42+fallX, hip=[hx,hy], sh=[hx+18,hy+54], head=[hx+27,hy+86], P={hip,sh,head,face:1,mood:'worried'};
-  setLimb(P,'lh',sh,[hx+4,hy+16],1);
-  setLimb(P,'rh',sh,[hx-6,hy+24],1);
-  setLimb(P,'lf',hip,[hx-48,hy-52],0);
-  setLimb(P,'rf',hip,[hx-60,hy-46],0);
+  // swinging on the rope, arms windmilling and legs kicking; it settles down as the room gets quiet
+  const f=flail, w=time, hx=bolt[0]+42+fallX, tilt=Math.sin(w*2.2)*6*f, hip=[hx,hy], sh=[hx+18+tilt,hy+54], head=[hx+27+tilt*1.3,hy+86+Math.sin(w*5)*2*f], P={hip,sh,head,face:1,mood:f>.5?'shock':'worried'};
+  const a1=w*7.5, a2=w*7.5+Math.PI*.9;
+  setLimb(P,'lh',sh,mixA([hx+4,hy+16],[sh[0]+30*Math.cos(a1),sh[1]+28+26*Math.sin(a1)],f),1);
+  setLimb(P,'rh',sh,mixA([hx-6,hy+24],[sh[0]-8+30*Math.cos(a2),sh[1]+30+26*Math.sin(a2)],f),1);
+  setLimb(P,'lf',hip,mixA([hx-48,hy-52],[hx-40+16*Math.sin(w*6),hy-62+14*Math.cos(w*6)],f),0);
+  setLimb(P,'rf',hip,mixA([hx-60,hy-46],[hx-50-16*Math.sin(w*6+1),hy-58-12*Math.cos(w*6+1)],f),0);
   return P;
 }
 function computePose(c){
@@ -375,8 +385,21 @@ function computePose(c){
   if(mode==='idle'&&onGround)return standPose(ex(HIP0)+120,1,0,geared.has(c.id));
   if(mode==='idle'){const P=climbPose(hy,10,1,true);P.mood='happy';const b=Math.sin(time*2.2)*1.2;P.sh[1]+=b;P.head[1]+=b;return P}
   if(mode==='look'){const P=climbPose(hy,14,1,true);P.mood='worried';return P}
+  if(mode==='grab'&&grab&&TIER(grab.f.r)===2){
+    // LEGENDARY: peek into the hole, reach in, rummage, pull the prize out and hold it high
+    const P=climbPose(hy,0,0,true), t=mtV/GDUR(grab.f), hold=P.rh, mouth=[ex(grab.y)+6,grab.y+18], deep=[ex(grab.y)-18,grab.y+17], out=[ex(grab.y)+48,grab.y+26], up=[P.sh[0]+10,P.sh[1]+62];
+    let tg=hold;
+    if(t<.2)tg=mixA(hold,mouth,ease(t/.2));
+    else if(t<.46){const w=Math.sin((t-.2)*60)*4;tg=[deep[0]+w,deep[1]+Math.cos((t-.2)*45)*3]}
+    else if(t<.6)tg=mixA(deep,out,ease((t-.46)/.14));
+    else if(t<.9)tg=mixA(out,up,ease((t-.6)/.1));
+    else tg=mixA(up,hold,ease((t-.9)/.1));
+    setLimb(P,'rh',P.sh,tg,1);
+    if(t<.46){P.face=0;P.up=0;P.head[0]-=6}else if(t<.95){P.face=1;P.mood=t<.6?'shock':'happy'}
+    return P;
+  }
   if(mode==='grab'&&grab){
-    const P=climbPose(hy,0,0,true), t=mtV/1.6, hold=P.rh, ip=[ex(grab.y)+62,grab.y+18], up=[P.sh[0]+6,P.sh[1]+56];
+    const P=climbPose(hy,0,0,true), t=mtV/GDUR(grab.f), hold=P.rh, ip=[ex(grab.y)+62,grab.y+18], up=[P.sh[0]+6,P.sh[1]+56];
     let tg=hold;
     if(t<.28)tg=mixA(hold,ip,ease(t/.28));else if(t<.5)tg=ip;else if(t<.8)tg=mixA(ip,up,ease((t-.5)/.3));else tg=mixA(up,hold,ease((t-.8)/.2));
     setLimb(P,'rh',P.sh,tg,1);
@@ -633,12 +656,13 @@ function drawClouds(front){
 function drawBirds(dt,m){
   birdT-=dt;
   if(birdT<0){birdT=rnd(6,14);const r=Math.random();let type=null;
-    if(m<150&&r<.45)type='fly';else if(m>=300&&m<900&&r<.2)type='balloon';else if(m>=900&&r<.2)type='plane';else if(m>12&&m<1300)type='bird';
-    if(type)birds.push({type,x:W+60,y:rnd(.1,.45)*H,v:{balloon:rnd(14,24),plane:rnd(140,200),fly:rnd(28,45),bird:rnd(50,110)}[type],s:rnd(.7,1.2),p:rnd(0,6),c:PAL[Math.floor(Math.random()*PAL.length)]})}
+    if(m<150&&r<.3)type='fly';else if(m<200&&r<.55)type='leaf';else if(m>=300&&m<900&&r<.2)type='balloon';else if(m>=900&&r<.2)type='plane';else if(m>12&&m<1300)type='bird';
+    if(type)birds.push({type,x:W+60,y:rnd(.1,.45)*H,v:{balloon:rnd(14,24),plane:rnd(140,200),fly:rnd(28,45),bird:rnd(50,110),leaf:rnd(40,80)}[type],s:rnd(.7,1.2),p:rnd(0,6),c:PAL[Math.floor(Math.random()*PAL.length)]})}
   birds=birds.filter(b=>b.x>-120);
   for(const b of birds){b.x-=b.v*dt;const s=6*b.s;
     if(b.type==='bird'){const w=Math.sin(time*9+b.p)*9*b.s;
       polyS([[b.x,b.y],[b.x+s*2,b.y-w-s],[b.x+s*1.2,b.y]],'#2b3142');polyS([[b.x+s*.8,b.y],[b.x-s*.6,b.y-w*.8-s*.6],[b.x-s*.2,b.y]],'#3b4358');polyS([[b.x-s*1.4,b.y+1],[b.x+s*2.2,b.y-1],[b.x+s*2,b.y+s*.5]],'#2b3142')}
+    else if(b.type==='leaf'){const y=b.y+Math.sin(time*1.6+b.p)*26+(W-b.x)*.08,r=7*b.s;g.save();g.translate(b.x,y);g.rotate(Math.sin(time*2+b.p)*1.2);polyS([[-r,0],[0,-r*.55],[r,0],[0,r*.55]],['#e9a23b','#d9531f','#6aa84f'][Math.floor(b.p)%3]);g.restore()}
     else if(b.type==='fly'){const y=b.y+Math.sin(time*2.5+b.p)*18,f=Math.abs(Math.sin(time*14+b.p));
       polyS([[b.x,y],[b.x-s*1.6,y-s*2*f],[b.x-s*.4,y-s*.4]],b.c);polyS([[b.x,y],[b.x+s*1.6,y-s*2*f],[b.x+s*.4,y-s*.4]],css(b.c,-.2));g.fillStyle='#1c2536';g.fillRect(b.x-1,y-s*.8,2,s*1.6)}
     else if(b.type==='balloon'){const y=b.y+Math.sin(time*.6+b.p)*8,r=26*b.s*Math.max(1,k*.6),pts=[];
@@ -650,7 +674,8 @@ function drawBirds(dt,m){
       polyS([[b.x-L*.1,b.y],[b.x+L,b.y-L*.12],[b.x+L,b.y+L*.12]],'#f4f6fa');polyS([[b.x+L*.35,b.y],[b.x+L*.6,b.y+L*.5],[b.x+L*.7,b.y]],'#c9d2e0');polyS([[b.x+L*.85,b.y],[b.x+L,b.y-L*.35],[b.x+L,b.y]],'#c9d2e0')}
   }
 }
-function wallBase(m){return m<600?mixA('#7a6e66','#6f7488',Math.min(1,m/500)):mixA('#6f7488','#9aa9c0',Math.min(1,(m-600)/800))}
+function wallBase(m){m=Math.max(0,m);const r=stratBlend(m,s=>hex2(s[2]));return r.length===3&&Array.isArray(r[0])?mixA(r[0],r[1],r[2]):r}
+function snowAt(m){return m<600?0:Math.min(1,(m-600)/150)}
 function drawWall(m){
   const top=camY+H*.5/k+120, bot=camY-H*.5/k-120, base=wallBase(m);
   g.save();g.beginPath();g.moveTo(-10,sy(top));
@@ -658,10 +683,12 @@ function drawWall(m){
   g.lineTo(-10,sy(bot-60));g.closePath();g.fillStyle=css(base);g.fill();g.clip();
   const Z=130, i0=Math.floor(-EB/k/Z)-1, j0=Math.floor(bot/Z)-1, j1=Math.ceil(top/Z)+1;
   const v=(a,b)=>[a*Z+(h2(a,b)-.5)*Z*.55,b*Z+(h2(a+31,b+17)-.5)*Z*.55];
+  const rows={};for(let j=j0;j<=j1+1;j++){const my=Math.max(0,(j*Z-HIP0)/U),st=STRATA[stratumAt(my)];rows[j]={c:wallBase(my),lay:st[4],snow:snowAt(my)}}
   for(let i=i0;i<=0;i++){const et=(i-i0)/(-i0||1);for(let j=j0;j<=j1;j++){
-    const A=v(i,j),B=v(i+1,j),C=v(i+1,j+1),D=v(i,j+1);
-    tri(A,B,C,css(base,-.2+et*.24+(h2(i*3+1,j*5+2)-.5)*.16));
-    tri(A,C,D,css(base,-.27+et*.24+(h2(i*7+3,j*2+9)-.5)*.16));
+    const A=v(i,j),B=v(i+1,j),C=v(i+1,j+1),D=v(i,j+1), R0=rows[j], stripe=R0.lay?Math.sin(j*1.7)*.07:0;
+    let c1=css(R0.c,-.2+et*.24+stripe+(h2(i*3+1,j*5+2)-.5)*.16), c2=css(R0.c,-.27+et*.24+stripe+(h2(i*7+3,j*2+9)-.5)*.16);
+    if(R0.snow&&h2(i*5+7,j*3+1)<R0.snow*.4)c1=css('#eef4fc',-(1-et)*.12);
+    tri(A,B,C,c1);tri(A,C,D,c2);
   }}
   g.restore();
   g.strokeStyle='rgba(255,255,255,.22)';g.lineWidth=3;g.beginPath();
@@ -695,28 +722,48 @@ function itemAt(c,b){
   return R[b];
 }
 function visBands(){const top=camY+H*.5/k+200,bot=camY-H*.5/k-200,r=[];for(let b=Math.max(1,Math.floor((bot-HIP0)/IB)-1);b<=Math.ceil((top-HIP0)/IB);b++)r.push(b);return r}
+function itemPos(it,hy){
+  // where the treasure is right now (world coords): ledge, flying around, or tucked in a hole
+  const t=TIER(it.f.r), rest=[ex(it.y)+(t===2?-20:62),it.y+(t===2?18:20)];
+  if(t!==1)return rest;
+  const wander=[ex(it.y)+170+110*Math.sin(time*.55+it.b),it.y+60+70*Math.sin(time*1.05+it.b*2)];
+  const near=Math.max(0,Math.min(1,(hy-(it.y-450))/330));
+  return mixA(wander,rest,ease(near));
+}
 function drawLedges(c,base){
-  for(const b of visBands()){const it=itemAt(c,b);if(!it)continue;const y=it.y,x0=ex(y),L=92;
+  for(const b of visBands()){const it=itemAt(c,b);if(!it)continue;const t=TIER(it.f.r),y=it.y,x0=ex(y);
+    if(t===1)continue;
+    if(t===2){// a dark hole in the rock with gold light spilling out
+      const got=c.got&&c.got[b], ctr=S2([x0-22,y+18]), rx=24*k, ry=19*k;
+      g.fillStyle=css(base,-.35);g.beginPath();g.ellipse(ctr[0],ctr[1],rx*1.25,ry*1.3,0,0,7);g.fill();
+      for(let i=0;i<9;i++){const a=i*Math.PI*2/9;hexS(ctr[0]+Math.cos(a)*rx*1.15,ctr[1]+Math.sin(a)*ry*1.2,7*k,css(base,(i%2?.1:-.15)),a,5)}
+      g.fillStyle='#120d0a';g.beginPath();g.ellipse(ctr[0],ctr[1],rx,ry,0,0,7);g.fill();
+      if(!got){const gl=g.createRadialGradient(ctr[0],ctr[1],2,ctr[0],ctr[1],rx*2.4);gl.addColorStop(0,`rgba(255,214,90,${.55+.2*Math.sin(time*3)})`);gl.addColorStop(1,'rgba(255,214,90,0)');g.fillStyle=gl;g.beginPath();g.arc(ctr[0],ctr[1],rx*2.4,0,7);g.fill()}
+      continue}
+    const L=92;
     polyW([[x0-4,y+2],[x0+L,y+2],[x0+L-8,y-12],[x0+L*.45,y-28],[x0-4,y-36]],css(base,-.12));
     polyW([[x0-4,y+2],[x0+L,y+2],[x0+L-6,y-7],[x0-4,y-7]],css(base,.16));
     polyW([[x0+L,y+2],[x0+L-8,y-12],[x0+L*.45,y-28]],css(base,-.32));
-    if((y-HIP0)/U>=600)polyW([[x0-4,y+5],[x0+L,y+5],[x0+L-5,y-1],[x0-4,y-1]],'#f4f8ff');
-    else{const t=S2([x0+8,y+2]);polyS([[t[0],t[1]],[t[0]+3*k,t[1]-10*k],[t[0]+6*k,t[1]]],'#5aa65e');polyS([[t[0]+5*k,t[1]],[t[0]+9*k,t[1]-7*k],[t[0]+12*k,t[1]]],'#4f9a55')}
+    if(snowAt((y-HIP0)/U)>.3)polyW([[x0-4,y+5],[x0+L,y+5],[x0+L-5,y-1],[x0-4,y-1]],'#f4f8ff');
+    else{const tt=S2([x0+8,y+2]);polyS([[tt[0],tt[1]],[tt[0]+3*k,tt[1]-10*k],[tt[0]+6*k,tt[1]]],'#5aa65e');polyS([[tt[0]+5*k,tt[1]],[tt[0]+9*k,tt[1]-7*k],[tt[0]+12*k,tt[1]]],'#4f9a55')}
   }
 }
 function drawItems(c,P,front){
-  const fs=Math.max(30,32*k);
+  const fs=Math.max(30,32*k), hy=dispY;
   for(const b of visBands()){const it=itemAt(c,b);if(!it)continue;
-    const held=mode==='grab'&&grab&&grab.b===b, ph=held?mtV/1.6:1, got=c.got&&c.got[b];
-    if(got&&!(held&&ph<.5))continue;
+    const tier=TIER(it.f.r), held=mode==='grab'&&grab&&grab.b===b, ph=held?mtV/GDUR(it.f):1, got=c.got&&c.got[b], inHand=tier===2?.48:.28;
+    if(got&&!(held&&ph<.62))continue;
     if(!!front!==!!held)continue;
-    const bob=got?0:Math.sin(time*2+b)*3*k;
-    let pos=S2([ex(it.y)+62,it.y+20]);
-    if(held&&ph>.28)pos=S2(P.rh);
-    if(!got){const rr=it.f.r, glow=['rgba(255,170,120,.38)','rgba(167,130,255,.42)','rgba(167,130,255,.5)','rgba(255,205,60,.6)'][rr], spk=['rgba(255,160,100,.95)','rgba(190,160,255,1)','rgba(190,160,255,1)',`hsl(${(time*120)%360},95%,65%)`][rr], ns=rr>=2?8:4, gr=fs*(rr>=3?.95+.08*Math.sin(time*5):rr===2?.82:.72);
+    let pos=S2(itemPos(it,hy)), sz=fs, bob=got?0:Math.sin(time*2+b)*3*k;
+    if(tier===1&&!got)bob=0;
+    if(held&&ph>inHand)pos=S2(P.rh);
+    if(tier===2&&!(held&&ph>inHand)){sz=fs*.55;g.globalAlpha=.55}  // just a glimpse inside the hole
+    if(!got&&tier!==2){const rr=it.f.r, glow=['rgba(255,170,120,.38)','rgba(167,130,255,.42)','rgba(167,130,255,.5)','rgba(255,205,60,.6)'][rr], spk=['rgba(255,160,100,.95)','rgba(190,160,255,1)','rgba(190,160,255,1)',`hsl(${(time*120)%360},95%,65%)`][rr], ns=tier?8:4, gr=fs*(tier?.82:.72);
       g.fillStyle=glow;g.beginPath();g.arc(pos[0],pos[1]+bob,gr,0,7);g.fill();
-      for(let i=0;i<ns;i++){const a=time*(rr>=2?2.2:1.4)+i*2*Math.PI/ns,r=fs*(rr>=2?1:.85);hexS(pos[0]+Math.cos(a)*r,pos[1]+bob+Math.sin(a)*r,(rr>=2?4:3)+2*Math.sin(time*4+i),spk,0,4)}}
-    g.font=`${fs}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';g.fillText(it.f.e,pos[0],pos[1]+bob);
+      for(let i=0;i<ns;i++){const a=time*(tier?2.2:1.4)+i*2*Math.PI/ns,r=fs*(tier?1:.85);hexS(pos[0]+Math.cos(a)*r,pos[1]+bob+Math.sin(a)*r,(tier?4:3)+2*Math.sin(time*4+i),spk,0,4)}
+      if(tier===1&&Math.random()<.35)bits.push({t:'spark',x:(pos[0]-EB)/k,y:camY+(H*.5-pos[1])/k,vx:rnd(-30,30),vy:rnd(-30,30),life:.4,age:0})}
+    g.save();g.translate(pos[0],pos[1]+bob);if(tier===1&&!got)g.rotate(Math.sin(time*3+b)*.25);
+    g.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='#000';g.fillText(it.f.e,0,0);g.restore();g.globalAlpha=1;
   }
 }
 let conf=[], flash=0, bannerQ=[], bannerT=0;
@@ -732,9 +779,9 @@ function drawLost(dt,P){
   g.save();g.translate(x,y);g.rotate(t*5);g.font=`${Math.max(28,30*k)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(lostItem.f.e,0,0);g.restore();
 }
 function drawFly(dt,c,P){
-  if(mode==='grab'&&grab&&!grab.flew&&mtV/1.6>=.5){grab.flew=1;const p=S2(P.rh);fly={e:grab.f.e,x:p[0],y:p[1],t:0};
+  if(mode==='grab'&&grab&&!grab.flew&&mtV/GDUR(grab.f)>=(TIER(grab.f.r)===2?.62:.5)){grab.flew=1;const p=S2(P.rh);fly={e:grab.f.e,x:p[0],y:p[1],t:0};
     const got=FINDS.filter(f=>c.finds[f.id]).length;
-    toast(grab.f.e,grab.f.n,RAR[grab.f.r],(c.finds[grab.f.id]===1?`New for ${c.name}! · `:'')+`${got} of ${FINDS.length} collected`,grab.f.r);
+    toast(grab.f.e,grab.f.n,RAR[grab.f.r],c.finds[grab.f.id]===1?`New for ${c.name}!`:`${c.name} now has ${c.finds[grab.f.id]}`,grab.f.r);
     if(grab.f.r>=2){burst(p[0],p[1],grab.f.r>=3?220:110);if(grab.f.r>=3)flash=1}}
   if(!fly)return;fly.t+=dt;const t=Math.min(1,fly.t/1.2),e=ease(t),x=lerp(fly.x,W*.5,e),y=lerp(fly.y,H*.18,e),sz=Math.max(30,32*k)*(1+Math.sin(t*Math.PI)*.9);
   g.globalAlpha=t<.75?1:1-(t-.75)/.25;g.font=`${sz}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(fly.e,x,y);g.globalAlpha=1;
@@ -790,8 +837,25 @@ function drawMap(c){
     g.fillStyle='#1c2536';g.font='800 13px Nunito, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(v.toLocaleString()+' m',x,yy+(i?26:-26))});
   hexS(x,cy,10,c.color);g.strokeStyle='#fff';g.lineWidth=2.5;g.beginPath();g.arc(x,cy,10,0,7);g.stroke();
 }
+let pebbles=[],pebT=6;
+function drawPebbles(dt){
+  pebT-=dt; if(pebT<0&&running){pebT=rnd(7,15);const n=Math.random()<.3?4:1,y=camY+H*.55/k;for(let i=0;i<n;i++)pebbles.push({y:y+i*30,x:rnd(6,40),vy:-rnd(80,200),a:0,s:rnd(3,6)})}
+  for(const p of pebbles){p.vy-=900*dt;p.y+=p.vy*dt;p.a+=dt*8;const w=ex(p.y)+p.x,q=S2([w,p.y]);g.save();g.translate(q[0],q[1]);g.rotate(p.a);polyS([[-p.s*k,-p.s*.6*k],[p.s*k,-p.s*.8*k],[p.s*.4*k,p.s*k]],css(wallBase((p.y-HIP0)/U),-.1));g.restore();
+    if(Math.random()<dt*2)dust([w,p.y],1,'rgba(255,255,255,.6)')}
+  pebbles=pebbles.filter(p=>sy(p.y)<H+40);
+}
+function drawMist(front){
+  const top=camY+H*.5/k+400, bot=camY-H*.5/k-400;
+  for(const st of STRATA){if(!st[0])continue;const y=HIP0+st[0]*U;if(y<bot||y>top)continue;
+    const p=sy(y), h=(front?150:260)*k, gr=g.createLinearGradient(0,p-h,0,p+h);
+    gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.5,front?'rgba(240,245,252,.32)':'rgba(255,255,255,.75)');gr.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=gr;g.fillRect(0,p-h,W,h*2);
+    if(!front){for(let i=0;i<9;i++){const x=((i/8)*W*1.2+time*(12+i*3))%(W*1.25)-W*.1;hexS(x,p+Math.sin(time*.5+i)*12*k,(50+hh(i+st[0])*50)*k,'rgba(255,255,255,.55)',0,7)}}
+    else{g.font=`700 ${Math.max(16,15*k)}px Fredoka, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillStyle='rgba(28,37,54,.75)';g.fillText(`${st[0].toLocaleString()} m · ${st[1]}`,W*.62,p)}
+  }
+}
 function drawSnow(dt,m){
-  const amt=Math.max(m>600?Math.min(1,(m-600)/200)*.5:0,stormAmt);
+  const amt=Math.max(snowAt(m)*.5,stormAmt);
   const n=Math.round(amt*160); if(!n)return;
   g.fillStyle='#fff';g.strokeStyle='rgba(255,255,255,.75)';
   for(let i=0;i<n;i++){const f=flakes[i];f.y+=dt*(.04+stormAmt*.3)*f.s;f.x+=dt*(.01-stormAmt*.5)*f.s;if(f.y>1){f.y-=1;f.x=Math.random()}if(f.x<0)f.x+=1;if(f.x>1)f.x-=1;
@@ -836,7 +900,7 @@ function readLevel(){
 }
 
 /* ---------- game logic ---------- */
-function setMode(m){mode=m;mt=0;if(m==='climb'){fall=null}}
+function setMode(m){mode=m;mt=0;if(m==='climb'){fall=null}if(m==='fall')flail=1}
 function toast(e,title,sub,small,r=0){toastQ.push({e,title,sub,small,r})}
 // How loud it got decides how bad the fall is: 1 slip to the last checkpoint, 2 down two checkpoints,
 // 3 down two checkpoints and a treasure drops out of the pack, 4 all the way back to base camp.
@@ -882,7 +946,7 @@ function tick(){
         const b=Math.floor(c.alt/ANCHOR+1e-9)+1; let na=c.alt+PACE[S.pace][1]/60*dt*sp;
         if(na>=b*ANCHOR){na=b*ANCHOR;setMode('clip')}
         c.alt=na; quietAdd(c,dt*sp); break;}
-      case 'grab': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>1.6)setMode('climb'); break;
+      case 'grab': if(overT>.5&&!(grab&&TIER(grab.f.r)===2)){setMode('look');break} quietAdd(c,dt*sp); if(mt>(grab?GDUR(grab.f):1.6))setMode('climb'); break;
       case 'clip': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>3)setMode('climb'); break;
       case 'look': if(overT>2.2){doFall(c,tierOf(peak));peak=0} else if(overT<.1){setMode('climb');peak=0} break;
       case 'fall': if(mt>2.2)setMode('hang'); break;
@@ -904,7 +968,7 @@ function hud(){
   $('#zoneV').textContent=ZONES[zoneIdx(c.alt)][1];
   const to=ANCHOR-(c.alt%ANCHOR);
   $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${Math.ceil(to-1e-6)} m`;
-  const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:'Found something!',look:'Uh oh… the climber can hear you!',fall:['','Slipped to the last checkpoint','Big fall! Down two checkpoints','Big fall, and a treasure dropped!','All the way back to base camp!'][fall?fall.tier||1:1],hang:'Get quiet to start climbing again',recover:'Back to climbing!'};
+  const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:grab&&TIER(grab.f.r)===2?'A secret hole in the rock!':grab&&TIER(grab.f.r)===1?'Caught something flying by!':'Found something!',look:'Uh oh… the climber can hear you!',fall:['','Slipped to the last checkpoint','Big fall! Down two checkpoints','Big fall, and a treasure dropped!','All the way back to base camp!'][fall?fall.tier||1:1],hang:'Get quiet to start climbing again',recover:'Back to climbing!'};
   $('#stText').textContent=running?T[mode]:T.idle;
   $('#status').className='status '+(!running?'':['look','fall','hang'].includes(mode)?'holding':'climbing');
 }
@@ -925,7 +989,7 @@ function frame(){
     fall.t+=dt;
     if(!fall.caught){fall.vy-=2200*dt;dispY+=fall.vy*dt;fallX=Math.min(28,fallX+dt*60);
       if(dispY<=fall.rest-(fall.ground?0:26)){fall.caught=true;if(fall.ground){dispY=HIP0;fall.vy=0}}}
-    else if(!fall.ground){const a=-55*(dispY-fall.rest)-5*fall.vy;fall.vy+=a*dt;dispY+=fall.vy*dt;fallX=Math.sin(fall.t*2.2)*16*Math.exp(-fall.t*.3)}
+    else if(!fall.ground){const a=-55*(dispY-fall.rest)-5*fall.vy;fall.vy+=a*dt;dispY+=fall.vy*dt;flail+=((overT>0||calmT<1?1:Math.max(.12,1-(calmT-1)/2))-flail)*Math.min(1,dt*3);fallX=Math.sin(fall.t*2.2)*(6+18*flail)}
   }else{
     if(mode==='gear')dispY=HIP0;else dispY+=(target-dispY)*Math.min(1,dt*(mode==='recover'?2.2:8));
     fallX*=Math.exp(-dt*3);
@@ -942,10 +1006,10 @@ function frame(){
   const P=fromPose&&blend<1?lerpPose(fromPose,tp,ease(blend)):tp; lastPose=P;
   const m=Math.max(0,(dispY-HIP0)/U), G=gearState(c);
   if(W>0){
-    drawSky(m);drawClouds(false);drawBirds(dt,m);drawWall(m);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
+    drawSky(m);drawClouds(false);drawBirds(dt,m);drawWall(m);drawMist(false);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
     if(G.rope>0||c.alt>0)drawRope(P,c);
     plantFX(P,m);
-    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawLost(dt,P);drawClouds(true);drawConfetti(dt);drawSnow(dt,m);
+    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawLost(dt,P);drawClouds(true);drawMist(true);drawPebbles(dt);drawConfetti(dt);drawSnow(dt,m);
     const hd=S2(P.head), bt=gearBubble(c);
     if(bt)bubble(hd[0],hd[1]-30*k,bt);
     drawMap(c);
@@ -960,7 +1024,7 @@ function frame(){
 function gearBubble(c){
   if(!running){return c.alt<=0&&mode==='idle'&&!geared.has(c.id)?'Ready when you are!':''}
   if(mode==='gear'){const t=mtV;return t<1.4?'Helmet on!':t<2.4?'Harness…':t<3.6?'Carabiners: click, click, click!':t<4.7?'Rope ready!':t<6?'Ice axe!':"Let's climb!"}
-  return {look:'Uh oh… too loud!',fall:fall&&fall.tier>=4?'Nooooo!':fall&&fall.caught?'Oof!':fall&&fall.tier>=2?'Whoaaaaa!!':'Whoaaa!',hang:['','Shh… quiet, please!','That was a big fall…','My treasure!','Back to the start…'][fall?fall.tier||1:1],clip:mtV<1.4?'Carabiner ready…':mtV<2.15?'Tap, tap…':mtV<2.9?'Click! Checkpoint!':'',grab:mtV>.8&&mtV<1.6?(grab&&grab.f.r>=3?'NO WAY!!':grab&&grab.f.r===2?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
+  return {look:'Uh oh… too loud!',fall:fall&&fall.tier>=4?'Nooooo!':fall&&fall.caught?'Oof!':fall&&fall.tier>=2?'Whoaaaaa!!':'Whoaaa!',hang:['','Shh… quiet, please!','That was a big fall…','My treasure!','Back to the start…'][fall?fall.tier||1:1],clip:mtV<1.4?'Carabiner ready…':mtV<2.15?'Tap, tap…':mtV<2.9?'Click! Checkpoint!':'',grab:!grab?'':TIER(grab.f.r)===2?(mtV<.7?'Ooh, what’s in here…?':mtV<1.6?'Reaching in…':mtV<3.2?'NO WAY!!':''):mtV>.8&&mtV<GDUR(grab.f)?(TIER(grab.f.r)===1?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
 }
 
 /* ---------- panels ---------- */
