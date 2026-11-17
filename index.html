@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.16">
+<meta name="version" content="v.17">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -129,7 +129,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.16</span>
+      <span class="ver" title="Quiet Climb version">v.17</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -653,27 +653,71 @@ function drawClouds(front){
     }
   }
 }
-function drawBirds(dt,m){
-  birdT-=dt;
-  if(birdT<0){birdT=rnd(6,14);const r=Math.random();let type=null;
-    if(m<150&&r<.3)type='fly';else if(m<200&&r<.55)type='leaf';else if(m>=300&&m<900&&r<.2)type='balloon';else if(m>=900&&r<.2)type='plane';else if(m>12&&m<1300)type='bird';
-    if(type)birds.push({type,x:W+60,y:rnd(.1,.45)*H,v:{balloon:rnd(14,24),plane:rnd(140,200),fly:rnd(28,45),bird:rnd(50,110),leaf:rnd(40,80)}[type],s:rnd(.7,1.2),p:rnd(0,6),c:PAL[Math.floor(Math.random()*PAL.length)]})}
-  birds=birds.filter(b=>b.x>-120);
-  for(const b of birds){b.x-=b.v*dt;const s=6*b.s;
-    if(b.type==='bird'){const w=Math.sin(time*9+b.p)*9*b.s;
-      polyS([[b.x,b.y],[b.x+s*2,b.y-w-s],[b.x+s*1.2,b.y]],'#2b3142');polyS([[b.x+s*.8,b.y],[b.x-s*.6,b.y-w*.8-s*.6],[b.x-s*.2,b.y]],'#3b4358');polyS([[b.x-s*1.4,b.y+1],[b.x+s*2.2,b.y-1],[b.x+s*2,b.y+s*.5]],'#2b3142')}
-    else if(b.type==='leaf'){const y=b.y+Math.sin(time*1.6+b.p)*26+(W-b.x)*.08,r=7*b.s;g.save();g.translate(b.x,y);g.rotate(Math.sin(time*2+b.p)*1.2);polyS([[-r,0],[0,-r*.55],[r,0],[0,r*.55]],['#e9a23b','#d9531f','#6aa84f'][Math.floor(b.p)%3]);g.restore()}
-    else if(b.type==='fly'){const y=b.y+Math.sin(time*2.5+b.p)*18,f=Math.abs(Math.sin(time*14+b.p));
+/* ---------- the sky is alive: birds near and far, little planes, and very rare silly things ---------- */
+// depth 0 = far away (small, slow, hazy, behind the cliff), 1 = middle, 2 = close (big, fast, in front of the climber)
+const DEPTH=[{s:.45,v:.45,a:.55},{s:1,v:1,a:1},{s:2.1,v:1.9,a:1}];
+const BANNERS=['SHHH… CLIMBERS AT WORK','GO CLIMBERS GO!','QUIET = HIGHER','HI CLASS!','KEEP CLIMBING!','YOU CAN DO IT!'];
+const SILLY=[['🐖','wings'],['🐄','balloons'],['🦆','balloons'],['🍕','wings'],['🐳','wings'],['🧦','wings'],['🥪','wings'],['🐟','wings'],['🪑','balloons'],['🦖','balloons'],['🐈','balloons'],['🍩','wings'],['🎂','balloons'],['🐸','balloons'],['🛁','balloons'],['🐌','wings']];
+let fT={bird:2,plane:rnd(25,50),silly:rnd(90,200),fly:3}, sillySaw=0;
+function spawn(kind,depth,o){birds.push(Object.assign({kind,depth,x:W+80*DEPTH[depth].s,y:rnd(.08,.5)*H,s:DEPTH[depth].s*rnd(.8,1.2),p:rnd(0,6),c:PAL[Math.floor(Math.random()*PAL.length)]},o))}
+function spawnFlyers(dt,m){
+  for(const key in fT)fT[key]-=dt;
+  if(fT.bird<0){fT.bird=rnd(3,8);
+    const d=Math.random()<.45?0:Math.random()<.82?1:2, r=Math.random();
+    if(m<1400||Math.random()<.25){
+      if(m>=40&&m<900&&r<.18){const n=5+Math.floor(Math.random()*4),y=rnd(.08,.35)*H;for(let i=0;i<n;i++){const o=i%2?1:-1,row=Math.ceil(i/2);spawn('goose',d===2?1:d,{x:W+60+row*26*DEPTH[d].s,y:y+o*row*14*DEPTH[d].s,v:70,p:i})}}
+      else if(m>=80&&r<.32)spawn('eagle',d,{v:55})
+      else if(m<500&&r<.48)spawn('gull',d,{v:85})
+      else{const n=1+Math.floor(Math.random()*3);for(let i=0;i<n;i++)spawn('bird',d,{x:W+60+i*40,y:rnd(.08,.5)*H,v:rnd(60,110)})}
+    }
+  }
+  if(fT.fly<0){fT.fly=rnd(6,14);const r=Math.random();
+    if(m<150&&r<.45)spawn('fly',1,{v:rnd(28,45)});else if(m<200&&r<.6)spawn('leaf',1,{v:rnd(40,80)});else if(m>=300&&m<900&&r<.3)spawn('balloon',Math.random()<.5?0:1,{v:rnd(14,24)})}
+  if(fT.plane<0){fT.plane=rnd(35,80);const d=Math.random()<.5?0:1;
+    if(m<1800)spawn('prop',d,{v:rnd(90,130),banner:Math.random()<.4?BANNERS[Math.floor(Math.random()*BANNERS.length)]:null});else spawn('jet',0,{v:rnd(140,200)})}
+  if(fT.silly<0){fT.silly=rnd(60,120);
+    if(Math.random()<.22){const [e,mode]=SILLY[Math.floor(Math.random()*SILLY.length)];spawn('silly',1,{v:rnd(45,70),e,mode,s:rnd(1.1,1.4)})}}
+}
+function drawBird(x,y,s,f,body,wing){polyS([[x,y],[x+s*2,y-f-s],[x+s*1.2,y]],body);polyS([[x+s*.8,y],[x-s*.6,y-f*.8-s*.6],[x-s*.2,y]],wing);polyS([[x-s*1.4,y+1],[x+s*2.2,y-1],[x+s*2,y+s*.5]],body)}
+function drawFlyers(dt,m,layer){
+  if(layer===0)spawnFlyers(dt,m);
+  for(const b of birds){if(b.depth!==layer)continue;
+    const D=DEPTH[b.depth];b.x-=b.v*D.v*dt;const s=6*b.s,sky=skyCols(m)[1];
+    g.globalAlpha=D.a;
+    const haze=c=>b.depth===0?css(mixA(c,sky,.45)):c;
+    if(b.kind==='bird'||b.kind==='goose'){const f=Math.sin(time*(b.kind==='goose'?6:9)+b.p)*9*b.s;drawBird(b.x,b.y,s,f,haze(b.kind==='goose'?'#4a4a42':'#2b3142'),haze(b.kind==='goose'?'#6a6656':'#3b4358'));
+      if(b.kind==='goose'){g.fillStyle=haze('#1c1c1c');g.fillRect(b.x-s*1.9,b.y-s*.3,s*.8,s*.6)}}
+    else if(b.kind==='gull'){const f=Math.sin(time*5+b.p)*7*b.s;drawBird(b.x,b.y,s*1.2,f,haze('#f4f6fa'),haze('#c9d2e0'));polyS([[b.x-s*1.8,b.y],[b.x-s*1.3,b.y+s*.5],[b.x-s*1.4,b.y-s*.2]],haze('#f2b33d'))}
+    else if(b.kind==='eagle'){const f=Math.sin(time*2.2+b.p)*5*b.s,S=s*1.8,x=b.x,y=b.y+Math.sin(time*.7+b.p)*14*b.s;
+      polyS([[x,y],[x+S*2.6,y-f-S*.6],[x+S*1.4,y+S*.2]],haze('#5a3a22'));polyS([[x+S*.6,y],[x-S*1.2,y-f*.8-S*.5],[x+S*.2,y+S*.2]],haze('#6e4a2c'));
+      polyS([[x-S*.9,y-S*.15],[x+S*1.6,y-S*.25],[x+S*2.2,y+S*.25],[x+S*.2,y+S*.35]],haze('#4a2f1c'));polyS([[x-S*1.5,y],[x-S*.8,y-S*.35],[x-S*.7,y+S*.25]],haze('#f4f1ea'));polyS([[x-S*1.75,y+S*.05],[x-S*1.45,y-S*.05],[x-S*1.5,y+S*.15]],haze('#f2b33d'))}
+    else if(b.kind==='prop'){const x=b.x,y=b.y+Math.sin(time*1.2+b.p)*6*b.s,L=48*b.s,col=haze(b.c);
+      if(b.banner){g.strokeStyle=haze('#5b6680');g.lineWidth=1;g.beginPath();g.moveTo(x+L,y);g.lineTo(x+L*1.9,y);g.stroke();
+        g.font=`700 ${Math.round(15*b.s)}px Fredoka, sans-serif`;const tw=g.measureText(b.banner).width+16*b.s,wv=Math.sin(time*6)*2;
+        polyS([[x+L*1.9,y-10*b.s+wv],[x+L*1.9+tw,y-10*b.s-wv],[x+L*1.9+tw,y+10*b.s-wv],[x+L*1.9,y+10*b.s+wv]],haze('#fff6d8'));g.fillStyle=haze('#b03a1a');g.textAlign='left';g.textBaseline='middle';g.fillText(b.banner,x+L*1.9+7*b.s,y)}
+      polyS([[x,y-L*.12],[x+L,y-L*.08],[x+L,y+L*.08],[x,y+L*.14]],col);polyS([[x+L*.2,y],[x+L*.55,y],[x+L*.45,y+L*.5],[x+L*.3,y+L*.5]],css(b.c,-.25));
+      polyS([[x+L*.85,y-L*.08],[x+L,y-L*.4],[x+L*1.04,y-L*.08]],col);polyS([[x+L*.15,y-L*.12],[x+L*.35,y-L*.12],[x+L*.3,y-L*.3]],'rgba(200,230,255,.85)');
+      const pr=Math.abs(Math.sin(time*40))*L*.3;g.fillStyle=haze('#3b4358');g.fillRect(x-L*.06,y-pr,L*.05,pr*2)}
+    else if(b.kind==='jet'){const L=26*b.s;g.strokeStyle='rgba(255,255,255,.75)';g.lineWidth=2;g.beginPath();g.moveTo(b.x+L,b.y);g.lineTo(b.x+L+200,b.y);g.stroke();
+      polyS([[b.x-L*.1,b.y],[b.x+L,b.y-L*.12],[b.x+L,b.y+L*.12]],'#f4f6fa');polyS([[b.x+L*.35,b.y],[b.x+L*.6,b.y+L*.5],[b.x+L*.7,b.y]],'#c9d2e0')}
+    else if(b.kind==='silly'){const y=b.y+Math.sin(time*1.4+b.p)*14,fs=34*b.s;
+      if(b.mode==='wings'){const f=Math.sin(time*12)*12*b.s;polyS([[b.x,y-fs*.1],[b.x+fs*.2,y-fs*.65-f],[b.x+fs*.55,y-fs*.2]],'#ffffff');polyS([[b.x,y-fs*.1],[b.x-fs*.25,y-fs*.6-f],[b.x-fs*.5,y-fs*.15]],'#e7eef8')}
+      else{['#e76f9a','#3a86ff','#e9b949'].forEach((cb,i)=>{const bx=b.x+(i-1)*fs*.38,by=y-fs*1.35-(i===1?fs*.2:0);g.strokeStyle='#5b6680';g.lineWidth=1;g.beginPath();g.moveTo(b.x,y-fs*.35);g.lineTo(bx,by+fs*.28);g.stroke();g.fillStyle=cb;g.beginPath();g.ellipse(bx,by,fs*.22,fs*.28,0,0,7);g.fill()})}
+      g.font=`${fs}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(b.e,b.x,y);
+      if(b.x<W*.75&&b.x>W*.3&&!b.seen){b.seen=1;sillySaw=3}}
+    else if(b.kind==='leaf'){const y=b.y+Math.sin(time*1.6+b.p)*26+(W-b.x)*.08,r=7*b.s;g.save();g.translate(b.x,y);g.rotate(Math.sin(time*2+b.p)*1.2);polyS([[-r,0],[0,-r*.55],[r,0],[0,r*.55]],['#e9a23b','#d9531f','#6aa84f'][Math.floor(b.p)%3]);g.restore()}
+    else if(b.kind==='fly'){const y=b.y+Math.sin(time*2.5+b.p)*18,f=Math.abs(Math.sin(time*14+b.p));
       polyS([[b.x,y],[b.x-s*1.6,y-s*2*f],[b.x-s*.4,y-s*.4]],b.c);polyS([[b.x,y],[b.x+s*1.6,y-s*2*f],[b.x+s*.4,y-s*.4]],css(b.c,-.2));g.fillStyle='#1c2536';g.fillRect(b.x-1,y-s*.8,2,s*1.6)}
-    else if(b.type==='balloon'){const y=b.y+Math.sin(time*.6+b.p)*8,r=26*b.s*Math.max(1,k*.6),pts=[];
+    else if(b.kind==='balloon'){const y=b.y+Math.sin(time*.6+b.p)*8,r=26*b.s*Math.max(1,k*.6),pts=[],col=haze(b.c);
       for(let i=0;i<8;i++){const a=-Math.PI/2+i*Math.PI/4;pts.push([b.x+Math.cos(a)*r,y+Math.sin(a)*r*(a>0?1.25:1)])}
-      polyS(pts,b.c);polyS([pts[0],pts[1],pts[2],pts[3],pts[4]],css(b.c,-.18));polyS([[b.x-r*.25,y-r],[b.x+r*.25,y-r],[b.x+r*.25,y+r*1.2],[b.x-r*.25,y+r*1.2]],'rgba(255,255,255,.45)');
+      polyS(pts,col);polyS([pts[0],pts[1],pts[2],pts[3],pts[4]],css(b.c,-.18));polyS([[b.x-r*.25,y-r],[b.x+r*.25,y-r],[b.x+r*.25,y+r*1.2],[b.x-r*.25,y+r*1.2]],'rgba(255,255,255,.45)');
       g.strokeStyle='#5b4a3a';g.lineWidth=1.5;g.beginPath();g.moveTo(b.x-r*.5,y+r*1.05);g.lineTo(b.x-r*.25,y+r*1.7);g.moveTo(b.x+r*.5,y+r*1.05);g.lineTo(b.x+r*.25,y+r*1.7);g.stroke();
       g.fillStyle='#8b5a2b';g.fillRect(b.x-r*.28,y+r*1.7,r*.56,r*.4)}
-    else{const L=34*b.s;g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=3;g.beginPath();g.moveTo(b.x+L,b.y);g.lineTo(b.x+L+160,b.y);g.stroke();
-      polyS([[b.x-L*.1,b.y],[b.x+L,b.y-L*.12],[b.x+L,b.y+L*.12]],'#f4f6fa');polyS([[b.x+L*.35,b.y],[b.x+L*.6,b.y+L*.5],[b.x+L*.7,b.y]],'#c9d2e0');polyS([[b.x+L*.85,b.y],[b.x+L,b.y-L*.35],[b.x+L,b.y]],'#c9d2e0')}
+    g.globalAlpha=1;
   }
+  if(layer===2){birds=birds.filter(b=>b.x>-260);sillySaw=Math.max(0,sillySaw-dt)}
 }
+function drawBirds(dt,m){drawFlyers(dt,m,0)}
 function wallBase(m){m=Math.max(0,m);const r=stratBlend(m,s=>hex2(s[2]));return r.length===3&&Array.isArray(r[0])?mixA(r[0],r[1],r[2]):r}
 function snowAt(m){return m<600?0:Math.min(1,(m-600)/150)}
 function drawWall(m){
@@ -1006,10 +1050,10 @@ function frame(){
   const P=fromPose&&blend<1?lerpPose(fromPose,tp,ease(blend)):tp; lastPose=P;
   const m=Math.max(0,(dispY-HIP0)/U), G=gearState(c);
   if(W>0){
-    drawSky(m);drawClouds(false);drawBirds(dt,m);drawWall(m);drawMist(false);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
+    drawSky(m);drawClouds(false);drawBirds(dt,m);drawFlyers(dt,m,1);drawWall(m);drawMist(false);drawLedges(c,wallBase(m));drawGround();drawRivals(c);
     if(G.rope>0||c.alt>0)drawRope(P,c);
     plantFX(P,m);
-    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawLost(dt,P);drawClouds(true);drawMist(true);drawPebbles(dt);drawConfetti(dt);drawSnow(dt,m);
+    drawItems(c,P,0);drawClimber(P,c,G);drawBits(dt);drawItems(c,P,1);drawFly(dt,c,P);drawLost(dt,P);drawClouds(true);drawFlyers(dt,m,2);drawMist(true);drawPebbles(dt);drawConfetti(dt);drawSnow(dt,m);
     const hd=S2(P.head), bt=gearBubble(c);
     if(bt)bubble(hd[0],hd[1]-30*k,bt);
     drawMap(c);
@@ -1022,6 +1066,7 @@ function frame(){
   requestAnimationFrame(frame);
 }
 function gearBubble(c){
+  if(sillySaw>0&&running&&mode==='climb')return 'Did anyone else see that?!';
   if(!running){return c.alt<=0&&mode==='idle'&&!geared.has(c.id)?'Ready when you are!':''}
   if(mode==='gear'){const t=mtV;return t<1.4?'Helmet on!':t<2.4?'Harness…':t<3.6?'Carabiners: click, click, click!':t<4.7?'Rope ready!':t<6?'Ice axe!':"Let's climb!"}
   return {look:'Uh oh… too loud!',fall:fall&&fall.tier>=4?'Nooooo!':fall&&fall.caught?'Oof!':fall&&fall.tier>=2?'Whoaaaaa!!':'Whoaaa!',hang:['','Shh… quiet, please!','That was a big fall…','My treasure!','Back to the start…'][fall?fall.tier||1:1],clip:mtV<1.4?'Carabiner ready…':mtV<2.15?'Tap, tap…':mtV<2.9?'Click! Checkpoint!':'',grab:!grab?'':TIER(grab.f.r)===2?(mtV<.7?'Ooh, what’s in here…?':mtV<1.6?'Reaching in…':mtV<3.2?'NO WAY!!':''):mtV>.8&&mtV<GDUR(grab.f)?(TIER(grab.f.r)===1?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
@@ -1154,7 +1199,7 @@ requestAnimationFrame(frame);
 if(!S.teacher)openSet();
 {let blocked=!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);try{if(document.featurePolicy&&!document.featurePolicy.allowsFeature('microphone'))blocked=true}catch(e){}
  if(blocked){$('#micMsg span').textContent=micHelp()+" Or try practice mode and hold Space to make noise.";$('#micRetry').style.display='none';$('#micMsg').classList.add('show')}}
-if(location.hash==='#debug')window.QC={next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{const c=cur();c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
+if(location.hash==='#debug')window.QC={spawn:(kind,d,o)=>spawn(kind,d,o||{}),next:m=>{for(let b=Math.floor(m*U/IB);b<9999;b++){const it=itemAt(cur(),b);if(it)return[(it.y-HIP0)/U,it.f.n]}},force:(m,id)=>{const b=Math.floor(((HIP0+m*U)-HIP0)/IB)+1;(rolls[cur().id]||(rolls[cur().id]={}))[b]={b,y:HIP0+b*IB+300,f:FINDS.find(f=>f.id===id)};return(300+b*IB)/U},S:()=>S,setAlt:m=>{const c=cur();c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;cur().alt=m;cur().zone=zoneIdx(m);dispY=HIP0+m*U;camY=dispY+25}};
 }
 </script>
 </body>
