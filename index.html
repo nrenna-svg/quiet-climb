@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.20">
+<meta name="version" content="v.22">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -48,7 +48,7 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .bar{position:relative;flex:1;height:14px;border-radius:999px;background:#e3eaf4;overflow:hidden}
 .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--calm);border-radius:999px;transition:background .6s}
 .over .fill{background:var(--storm)}
-.tier{position:absolute;top:-2px;bottom:-2px;width:3px;border-radius:2px;opacity:.85}#tier0{background:#e9a23b}#tier1{background:#e0602a}#tier2{background:#b8202a}
+.tier{position:absolute;top:-2px;bottom:-2px;width:3px;border-radius:2px;opacity:.85}#tier0{background:#e9a23b}#tier1{background:#c8302a}
 .goal{position:absolute;top:-4px;bottom:-4px;width:3px;background:var(--ink);border-radius:2px}
 .banner{position:absolute;left:50%;top:16px;transform:translate(-50%,-30px) scale(.9);opacity:0;transition:opacity .5s,transform .6s cubic-bezier(.2,1.4,.4,1);display:flex;align-items:center;gap:18px;padding:16px 26px 16px 18px;border-radius:18px;background:linear-gradient(#fff6d8,#ffe9a8);border:3px solid #e9b949;box-shadow:0 14px 34px rgba(0,0,0,.25);z-index:6;width:min(640px,calc(100% - 40px));pointer-events:none}
 .banner.show{opacity:1;transform:translate(-50%,0) scale(1)}
@@ -115,6 +115,10 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
 .calmsg{font-weight:700}
 .danger{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:2px solid var(--line)}
 .btn.warn{border-color:#f3b4a0;color:#b03a1a}
+[hidden]{display:none!important}
+.dev{margin-top:18px}.devbtn{min-height:32px;padding:2px 10px;font-size:12px;opacity:.55}
+.devgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.devgrid .btn{font-size:14px;padding:6px 8px}
+@media(max-width:600px){.devgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .foot{display:flex;justify-content:flex-end;margin-top:20px;gap:8px;position:sticky;bottom:-24px;background:#fff;padding:12px 0}
 .cele{text-align:center}
 .cele .big{font:700 clamp(30px,4vw,46px)/1.1 Fredoka,sans-serif;margin:8px 0}
@@ -129,7 +133,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.20</span>
+      <span class="ver" title="Quiet Climb version">v.22</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -145,12 +149,12 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
       <div class="toast" id="toast"><span class="em" id="tEm"></span><span><small id="tR"></small><b id="tN"></b><small id="tW"></small></span></div>
       <div class="mustard" id="micMsg"><span>The microphone isn't available. Allow mic access in the browser's address bar, or try practice mode.</span><button class="btn" id="micRetry">Try again</button><button class="btn" id="micPractice">Try practice mode</button></div>
-      <div class="meter" id="meter"><span>Voice level</span><div class="bar"><div class="fill" id="fill"></div><div class="goal" id="goalMark"></div><div class="tier" id="tier0"></div><div class="tier" id="tier1"></div><div class="tier" id="tier2"></div></div><span id="goalName"></span></div>
+      <div class="meter" id="meter"><span>Voice level</span><div class="bar"><div class="fill" id="fill"></div><div class="goal" id="goalMark"></div><div class="tier" id="tier0"></div><div class="tier" id="tier1"></div></div><span id="goalName"></span></div>
     </section>
     <aside>
       <div class="card">
         <button class="btn primary go" id="goBtn">Start climbing</button>
-        <button class="btn noise" id="noiseBtn">Hold to make noise (Space · louder: 2, 3, 4)</button>
+        <button class="btn noise" id="noiseBtn">Hold to make noise (Space · louder: 2, 3)</button>
         <div class="times"><span>This session <b id="sessT">0:00</b></span><span>Quiet <b id="sessQ">0:00</b></span></div>
       </div>
       <div class="card"><h2>Who's highest this week</h2><ol id="board"></ol></div>
@@ -186,7 +190,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <p class="hint">Only changes how heights are shown. Progress is the same either way. The height-fact banners switch too.</p>
     <h4>Falls</h4>
     <div class="seg" id="fallSeg"></div>
-    <p class="hint">Tough: the louder it gets, the worse the fall. Past the goal line the climber slips to the last checkpoint. Past the orange line he drops two checkpoints. Past the red line he also loses a treasure. Past the dark red line he falls all the way back to base camp. Gentle: every fall is just to the last checkpoint.</p>
+    <p class="hint">Tough: the louder it gets, the worse the fall. Past the goal line the climber slips to the last checkpoint. Past the orange line he drops two checkpoints. Past the red line he drops three and loses a treasure. If it gets louder while he's hanging, he slips further. He never falls all the way to the bottom. Gentle: every fall is just to the last checkpoint.</p>
     <h4>Climbing</h4>
     <label class="lb">Climb speed</label>
     <div class="seg" id="paceSeg"></div>
@@ -200,6 +204,24 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
       <button class="btn warn" id="resetBtn">Reset all climbs to base camp</button>
       <button class="btn warn" id="weekBtn">End the week and crown a winner</button>
       <button class="btn warn" id="wipeBtn">Erase everything</button>
+    </div>
+    <div class="dev" id="devBox">
+      <div class="calrow" id="devLock"><button class="btn devbtn" id="devOpen">Dev</button><span id="devPinRow" hidden><input class="in" id="devPin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" style="width:140px"><button class="btn" id="devGo">Unlock</button><span class="calmsg" id="devMsg"></span></span></div>
+      <div id="devPanel" hidden>
+        <h4>Developer mode</h4>
+        <p class="hint">For testing. Actions apply to the class showing now. Heights set here are real and get saved.</p>
+        <label class="lb" for="devH">Jump to height</label>
+        <div class="calrow"><input class="in" id="devH" type="number" min="0" step="1" style="width:160px"><span id="devHU">ft</span><button class="btn" id="devJump">Jump</button><span class="hint">Height-fact banners below that height count as earned.</span></div>
+        <label class="lb">Play it now</label>
+        <div class="devgrid">
+          <button class="btn" data-dev="common">Common find</button><button class="btn" data-dev="rare">Rare flying find</button><button class="btn" data-dev="legend">Legendary hole</button>
+          <button class="btn" data-dev="banner">Next height banner</button><button class="btn" data-dev="clip">Checkpoint clip</button><button class="btn" data-dev="zone">Zone pop-up</button>
+          <button class="btn" data-dev="fall1">Fall 1 checkpoint</button><button class="btn" data-dev="fall2">Fall 2 checkpoints</button><button class="btn" data-dev="fall3">Fall 3 + lose treasure</button>
+          <button class="btn" data-dev="diver">Skydivers</button><button class="btn" data-dev="silly">Silly flyby</button><button class="btn" data-dev="plane">Banner plane</button>
+          <button class="btn" data-dev="geese">Geese V</button><button class="btn" data-dev="eagle">Close eagle</button><button class="btn" data-dev="pebbles">Falling pebbles</button>
+          <button class="btn" data-dev="everest">Everest celebration</button><button class="btn" data-dev="gear">Replay gear-up</button><button class="btn warn" data-dev="lock">Lock dev mode</button>
+        </div>
+      </div>
     </div>
     <div class="foot"><button class="btn primary" id="doneBtn">Done</button></div>
   </div>
@@ -993,23 +1015,43 @@ function readLevel(){
 /* ---------- game logic ---------- */
 function setMode(m){mode=m;mt=0;if(m==='climb'){fall=null}if(m==='fall')flail=1}
 function toast(e,title,sub,small,r=0){toastQ.push({e,title,sub,small,r})}
-// How loud it got decides how bad the fall is: 1 slip to the last checkpoint, 2 down two checkpoints,
-// 3 down two checkpoints and a treasure drops out of the pack, 4 all the way back to base camp.
-const TIERS=[.33,.55,.8];
+// How loud it gets decides how far he falls: past the goal line, to the last checkpoint; past the orange line,
+// down 2 checkpoints; past the red line, down 3 checkpoints and a treasure drops out of the pack.
+// He never falls to base camp. If it gets louder while he's already falling or hanging, he slips further, live.
+const TIERS=[.18,.38];
 function tierLine(i){const g=goalVal();return g+(100-g)*TIERS[i]}
-function tierOf(v){return v>tierLine(2)?4:v>tierLine(1)?3:v>tierLine(0)?2:1}
-let peak=0, lostItem=null;
-function doFall(c,tier){
-  if(S.falls==='gentle')tier=1;
-  const n0=Math.floor(c.alt/ANCHOR+1e-9), n=tier>=4?0:tier>=2?Math.max(0,n0-1):n0, ground=n===0;
+function tierOf(v){return v>tierLine(1)?3:v>tierLine(0)?2:1}
+let peak=0, lostItem=null, escT=0;
+function dropTo(c,tier,n0){
+  // n0 = the checkpoint he was on when the trouble started; tier 1/2/3 = fall 1/2/3 checkpoints from there
+  const n=Math.max(0,n0-(tier-1)), ground=n===0;
   c.alt=n*ANCHOR; c.zone=Math.min(c.zone||0,zoneIdx(c.alt));
   const by=boltY(n), rest=ground?HIP0:by-74;
-  if(dispY-rest>2600)dispY=rest+2600;  // long falls: skip ahead so the drop stays short and dramatic
-  fall={ground,rest,vy:0,caught:false,bolt:[ex(by)+8,by],t:0,tier};
-  lostItem=null;
-  if(tier===3){const owned=FINDS.filter(f=>c.finds[f.id]>0);if(owned.length){const f=owned[Math.floor(Math.random()*owned.length)];c.finds[f.id]--;if(!c.finds[f.id])delete c.finds[f.id];lostItem={f,t:0};renderFinds();toast(f.e,`Dropped the ${f.n}!`,'Lost from the trophy case',`It fell all the way down. ${c.name} can find another one.`,0)}}
-  if(tier===4)toast('🏕️','Back to base camp!','Way too loud',`${c.name} starts the climb again from the bottom.`,0);
-  else if(tier===2&&n<n0)toast('⬇️','Down two checkpoints!','Too loud',`${c.name} slipped past the last checkpoint.`,0);
+  if(dispY-rest>2600)dispY=rest+2600;
+  return{ground,rest,bolt:[ex(by)+8,by],n};
+}
+function loseTreasure(c){const owned=FINDS.filter(f=>c.finds[f.id]>0);if(!owned.length)return;const f=owned[Math.floor(Math.random()*owned.length)];c.finds[f.id]--;if(!c.finds[f.id])delete c.finds[f.id];lostItem={f,t:0};renderFinds();toast(f.e,`Dropped the ${f.n}!`,'Lost from the trophy case',`It fell all the way down. ${c.name} can find another one.`,0)}
+function fallToast(c,tier,landed,n0){if(tier>=2&&landed<n0)toast('⬇️',tier===3?'Down three checkpoints!':'Down two checkpoints!','Too loud',`${c.name} slipped past the last checkpoint.`,0)}
+function doFall(c,tier){
+  if(S.falls==='gentle')tier=1;
+  const n0=Math.floor(c.alt/ANCHOR+1e-9), d=dropTo(c,tier,n0);
+  fall=Object.assign({vy:0,caught:false,t:0,tier,n0},d);
+  lostItem=null;escT=0;peak=0;
+  if(tier===3)loseTreasure(c);
+  fallToast(c,tier,d.n,n0);
+  setMode('fall');save();
+}
+// still loud (and louder) while falling or hanging: slip again to the next tier
+function escalate(c,dt){
+  if(!fall||S.falls==='gentle'||fall.ground||fall.tier>=3){escT=0;return}
+  const t=tierOf(smooth);
+  if(smooth>goalVal()&&t>fall.tier){escT+=dt}else escT=Math.max(0,escT-dt);
+  if(escT<.9)return;
+  escT=0;const nt=t, d=dropTo(c,nt,fall.n0);
+  if(d.n>=fall.n){fall.tier=nt;return}
+  Object.assign(fall,d,{tier:nt,caught:false,vy:Math.min(fall.vy,0),t:0});
+  if(nt===3)loseTreasure(c);
+  fallToast(c,nt,d.n,fall.n0);
   setMode('fall');save();
 }
 function quietAdd(c,d){
@@ -1024,7 +1066,8 @@ function tick(){
   if(calib)calibStep(dt);
   if(running){
     if(over){overT+=dt;calmT=0;peak=Math.max(peak,smooth)}else{overT=Math.max(0,overT-dt*1.5);calmT+=dt;if(overT===0)peak=0}
-    const c=cur(), sp=practice?6:1, was=c.alt; mt+=dt;
+    if(devBoost>0)devBoost-=dt;
+    const c=cur(), sp=(practice?6:1)*(devBoost>0?6:1), was=c.alt; mt+=dt;
     c.total+=dt*sp; sessT+=dt*sp;
     switch(mode){
       case 'gear': if(mt>7.6){geared.add(c.id);setMode('climb')} break;
@@ -1032,7 +1075,7 @@ function tick(){
       case 'climb':{
         if(overT>.5){setMode('look');break}
         {const hy=HIP0+c.alt*U, bi=Math.floor((hy-HIP0)/IB); c.got=c.got||{};
-          for(const bb of [bi,bi+1]){const it=itemAt(c,bb);if(it&&!c.got[bb]&&hy>=it.y-45&&hy<it.y+40){grab={b:bb,y:it.y,f:it.f};c.got[bb]=1;c.finds[it.f.id]=(c.finds[it.f.id]||0)+1;setMode('grab');renderFinds();save();break}}}
+          for(const bb of [bi,bi+1]){const it=itemAt(c,bb);if(it&&!c.got[bb]&&hy>=it.y-45&&hy<it.y+40){grab={b:bb,y:it.y,f:it.f};c.got[bb]=1;c.finds[it.f.id]=(c.finds[it.f.id]||0)+1;setMode('grab');devBoost=0;renderFinds();save();break}}}
         if(mode!=='climb')break;
         const b=Math.floor(c.alt/ANCHOR+1e-9)+1; let na=c.alt+PACE[S.pace][1]/60*dt*sp;
         if(na>=b*ANCHOR){na=b*ANCHOR;setMode('clip')}
@@ -1040,8 +1083,8 @@ function tick(){
       case 'grab': if(overT>.5&&!(grab&&TIER(grab.f.r)===2)){setMode('look');break} quietAdd(c,dt*sp); if(mt>(grab?GDUR(grab.f):1.6))setMode('climb'); break;
       case 'clip': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>3)setMode('climb'); break;
       case 'look': if(overT>2.2){doFall(c,tierOf(peak));peak=0} else if(overT<.1){setMode('climb');peak=0} break;
-      case 'fall': if(mt>2.2)setMode('hang'); break;
-      case 'hang': if(calmT>3)setMode('recover'); break;
+      case 'fall': escalate(c,dt); if(mode==='fall'&&mt>2.2)setMode('hang'); break;
+      case 'hang': escalate(c,dt); if(mode==='hang'&&calmT>3){setMode('recover');overT=0;peak=0;escT=0} break;
       case 'recover': if(mt>1.8)setMode('climb'); break;
     }
     c.best=Math.max(c.best||0,c.alt);
@@ -1059,7 +1102,7 @@ function hud(){
   $('#zoneV').textContent=ZONES[zoneIdx(c.alt)][1];
   const to=ANCHOR-(c.alt%ANCHOR);
   $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${H_(to,'ceil')}`;
-  const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:grab&&TIER(grab.f.r)===2?'A secret hole in the rock!':grab&&TIER(grab.f.r)===1?'Caught something flying by!':'Found something!',look:'Uh oh… the climber can hear you!',fall:['','Slipped to the last checkpoint','Big fall! Down two checkpoints','Big fall, and a treasure dropped!','All the way back to base camp!'][fall?fall.tier||1:1],hang:'Get quiet to start climbing again',recover:'Back to climbing!'};
+  const T={idle:c.alt>0?'Paused':'Press Start to gear up',gear:'Gearing up…',back:'Back on the wall!',climb:'Climbing… keep it quiet',clip:'Click! Checkpoint saved',grab:grab&&TIER(grab.f.r)===2?'A secret hole in the rock!':grab&&TIER(grab.f.r)===1?'Caught something flying by!':'Found something!',look:'Uh oh… the climber can hear you!',fall:['','Slipped to the last checkpoint','Big fall! Down two checkpoints','Huge fall! Down three checkpoints'][fall?fall.tier||1:1],hang:escT>.2?'Still too loud… he’s slipping!':'Get quiet to start climbing again',recover:'Back to climbing!'};
   $('#stText').textContent=running?T[mode]:T.idle;
   $('#status').className='status '+(!running?'':['look','fall','hang'].includes(mode)?'holding':'climbing');
 }
@@ -1116,7 +1159,7 @@ function gearBubble(c){
   if(sillySaw>0&&running&&mode==='climb')return 'Did anyone else see that?!';
   if(!running){return c.alt<=0&&mode==='idle'&&!geared.has(c.id)?'Ready when you are!':''}
   if(mode==='gear'){const t=mtV;return t<1.4?'Helmet on!':t<2.4?'Harness…':t<3.6?'Carabiners: click, click, click!':t<4.7?'Rope ready!':t<6?'Ice axe!':"Let's climb!"}
-  return {look:'Uh oh… too loud!',fall:fall&&fall.tier>=4?'Nooooo!':fall&&fall.caught?'Oof!':fall&&fall.tier>=2?'Whoaaaaa!!':'Whoaaa!',hang:['','Shh… quiet, please!','That was a big fall…','My treasure!','Back to the start…'][fall?fall.tier||1:1],clip:mtV<1.4?'Carabiner ready…':mtV<2.15?'Tap, tap…':mtV<2.9?'Click! Checkpoint!':'',grab:!grab?'':TIER(grab.f.r)===2?(mtV<.7?'Ooh, what’s in here…?':mtV<1.6?'Reaching in…':mtV<3.2?'NO WAY!!':''):mtV>.8&&mtV<GDUR(grab.f)?(TIER(grab.f.r)===1?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
+  return {look:'Uh oh… too loud!',fall:fall&&fall.caught?'Oof!':fall&&fall.tier>=3?'Whoaaaaaaa!!!':fall&&fall.tier>=2?'Whoaaaaa!!':'Whoaaa!',hang:escT>.2?'No no no, quiet!!':['','Shh… quiet, please!','That was a big fall…','My treasure!'][fall?fall.tier||1:1],clip:mtV<1.4?'Carabiner ready…':mtV<2.15?'Tap, tap…':mtV<2.9?'Click! Checkpoint!':'',grab:!grab?'':TIER(grab.f.r)===2?(mtV<.7?'Ooh, what’s in here…?':mtV<1.6?'Reaching in…':mtV<3.2?'NO WAY!!':''):mtV>.8&&mtV<GDUR(grab.f)?(TIER(grab.f.r)===1?'WOW, a rare one!':'Got it!'):'',back:'Back on the wall!'}[mode]||'';
 }
 
 /* ---------- panels ---------- */
@@ -1138,7 +1181,7 @@ function renderFinds(){
 }
 function renderTitle(){const t=titleFor(S.teacher,cur().name);$('#title').textContent=t;document.title=t+' · Quiet Climb'}
 function renderSel(){$('#classSel').innerHTML=S.classes.map(c=>`<option value="${c.id}"${c.id===S.active?' selected':''}>${esc(c.name)}</option>`).join('')}
-function renderGoal(){$('#goalMark').style.left=goalVal()+'%';for(let i=0;i<3;i++){const e=$('#tier'+i);e.style.left=tierLine(i)+'%';e.style.display=S.falls==='gentle'?'none':''}$('#goalName').textContent='Goal: '+GOALS[S.goal]}
+function renderGoal(){$('#goalMark').style.left=goalVal()+'%';for(let i=0;i<2;i++){const e=$('#tier'+i);e.style.left=tierLine(i)+'%';e.style.display=S.falls==='gentle'?'none':''}$('#goalName').textContent='Goal: '+GOALS[S.goal]}
 function renderAll(){cur();renderTitle();renderSel();renderBoard();renderFinds();renderGoal();hud()}
 
 /* ---------- controls ---------- */
@@ -1152,6 +1195,48 @@ $('#goBtn').onclick=async()=>{
   setMode(c.alt<=0&&!geared.has(c.id)?'gear':c.alt<=0?'climb':'back');
   running=true;lastT=performance.now();$('#goBtn').textContent='Pause';$('#goBtn').classList.add('pause');$('#goBtn').blur();
 };
+/* ---------- developer mode (PIN 175017) ---------- */
+let devOn=false, devBoost=0;
+$('#devOpen').onclick=()=>{$('#devPinRow').hidden=!$('#devPinRow').hidden;$('#devPin').value='';$('#devMsg').textContent='';if(!$('#devPinRow').hidden)$('#devPin').focus()};
+function devUnlock(){if($('#devPin').value.trim()==='175017'){devOn=true;$('#devLock').hidden=true;$('#devPanel').hidden=false;devFill()}else{$('#devMsg').textContent='Wrong PIN';$('#devPin').value=''}}
+$('#devGo').onclick=devUnlock;$('#devPin').addEventListener('keydown',e=>{if(e.key==='Enter')devUnlock()});
+function devFill(){$('#devHU').textContent=U_();$('#devH').value=Math.floor(cv_(cur().alt))}
+function devRun(){
+  // start climbing without waiting for the microphone, so effects can be watched straight away
+  if(!running){const c=cur();overT=0;calmT=0;setMode(c.alt<=0&&!geared.has(c.id)?'gear':c.alt<=0?'climb':'back');running=true;lastT=performance.now();$('#goBtn').textContent='Pause';$('#goBtn').classList.add('pause')}
+  $('#setup').classList.remove('show');
+}
+function devJump(m){const c=cur();m=Math.max(0,m);c.alt=m;c.best=Math.max(c.best||0,m);c.zone=zoneIdx(m);c.ach=c.ach||{};for(const a of ACHIEVEMENTS)if(m>=a.m)c.ach[a.id]=1;
+  delete rolls[c.id];c.got={};if(m>0)geared.add(c.id);fall=null;if(running)setMode('climb');dispY=HIP0+m*U;camY=dispY+25;lastPose=null;renderAll();save()}
+function devPlace(tier){
+  const c=cur(), pool=FINDS.filter(f=>TIER(f.r)===tier), f=pool[Math.floor(Math.random()*pool.length)], hy=HIP0+c.alt*U;
+  const y=hy+(tier===1?260:200), b=Math.floor((y-HIP0)/IB);
+  (rolls[c.id]||(rolls[c.id]={}))[b]={b,y,f};c.got=c.got||{};delete c.got[b];
+  if(mode!=='climb'&&mode!=='gear')setMode('climb');
+  devBoost=8;  // fast-forward the climb up to the treasure
+}
+$('#devJump').onclick=()=>{const v=+$('#devH').value||0;devJump(S.units==='m'?v:v/FT);$('#devH').blur()};
+$('#devPanel').addEventListener('click',e=>{
+  const k2=e.target.closest('[data-dev]')?.dataset.dev;if(!k2)return;const c=cur();
+  if(k2==='lock'){devOn=false;$('#devPanel').hidden=true;$('#devLock').hidden=false;$('#devPinRow').hidden=true;return}
+  if(k2==='gear'){geared.delete(c.id);devJump(0);devRun();setMode('gear');return}
+  if(c.alt<1&&k2!=='banner'&&k2!=='everest')devJump(Math.max(c.alt,35));
+  devRun();
+  if(k2==='common')devPlace(0);
+  else if(k2==='rare')devPlace(1);
+  else if(k2==='legend')devPlace(2);
+  else if(k2==='banner'){const a=ACHIEVEMENTS.find(x=>!(c.ach||{})[x.id]&&x.m>c.alt)||ACHIEVEMENTS.find(x=>x.m>c.alt)||ACHIEVEMENTS[0];bannerQ.push(a)}
+  else if(k2==='everest'){bannerQ.push(ACHIEVEMENTS.find(x=>x.id==='mount-everest'))}
+  else if(k2==='clip'){c.alt=(Math.floor(c.alt/ANCHOR)+1)*ANCHOR-.3;setMode('climb')}
+  else if(k2==='zone'){const z=Math.min(ZONES.length-1,zoneIdx(c.alt)+1);toast(ZONES[z][2],ZONES[z][1],'New zone reached!',`${c.name} made it to ${H_(ZONES[z][0])}`,2)}
+  else if(k2.startsWith('fall')){const t=+k2.slice(4);if(t===3&&!FINDS.some(f=>c.finds[f.id]>0)){const f=FINDS[0];c.finds[f.id]=1;renderFinds()}if(c.alt<t*ANCHOR+1)devJump(t*ANCHOR+5);const keep=S.falls;S.falls='tough';doFall(c,t);S.falls=keep}
+  else if(k2==='diver'){const x0=rnd(.5,.8)*W;for(let i=0;i<3;i++)spawn('diver',1,{v:0,x:x0+i*36,y:-30-i*18,vx:-10,open:H*.3+i*22,t:0,c2:PAL[(i+3)%PAL.length]})}
+  else if(k2==='silly'){const [em,md]=SILLY[Math.floor(Math.random()*SILLY.length)];spawn('silly',1,{v:65,e:em,mode:md,s:1.3,y:H*.35})}
+  else if(k2==='plane')spawn('prop',1,{v:110,banner:BANNERS[Math.floor(Math.random()*BANNERS.length)],y:H*.22})
+  else if(k2==='geese'){const y=H*.18;for(let i=0;i<7;i++){const o=i%2?1:-1,r=Math.ceil(i/2);spawn('goose',1,{v:70,x:W+60+r*26,y:y+o*r*14,p:i})}}
+  else if(k2==='eagle')spawn('eagle',2,{v:55,y:H*.3})
+  else if(k2==='pebbles')pebT=0;
+});
 function switchClass(id){stop();S.active=id;sessT=sessQ=0;nextFind=rnd(150,360);const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;renderAll();save()}
 $('#classSel').onchange=e=>switchClass(e.target.value);
 $('#fsBtn').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
@@ -1160,8 +1245,8 @@ nb.addEventListener('pointerdown',()=>held=goalVal()+6);
 ['pointerup','pointerleave','pointercancel'].forEach(ev=>nb.addEventListener(ev,()=>held=false));
 const typing=e=>/INPUT|SELECT|TEXTAREA/.test(e.target.tagName);
 // practice: Space = a bit loud, hold 2 / 3 / 4 for the louder levels
-addEventListener('keydown',e=>{if(!practice||typing(e))return;const lv={Space:goalVal()+6,Digit2:tierLine(0)+5,Digit3:tierLine(1)+5,Digit4:tierLine(2)+5}[e.code];if(lv){held=lv;e.preventDefault()}});
-addEventListener('keyup',e=>{if(['Space','Digit2','Digit3','Digit4'].includes(e.code)){held=0;if(practice&&!typing(e))e.preventDefault()}});
+addEventListener('keydown',e=>{if(!practice||typing(e))return;const lv={Space:goalVal()+6,Digit2:tierLine(0)+5,Digit3:tierLine(1)+6}[e.code];if(lv){held=lv;e.preventDefault()}});
+addEventListener('keyup',e=>{if(['Space','Digit2','Digit3'].includes(e.code)){held=0;if(practice&&!typing(e))e.preventDefault()}});
 function setPractice(on){
   if(on===practice)return; stop();
   if(on){save();snap=JSON.stringify(S);practice=true}else{practice=false;try{S=JSON.parse(snap)}catch(e){}}
@@ -1180,6 +1265,7 @@ function openSet(){
   $('#calMsg').textContent=S.cal?`Calibrated (quiet ≈ ${Math.round(S.cal.base)}, talking ≈ ${Math.round(S.cal.talk)})`:'Not calibrated yet';
   if(an)listMics();
   if(!S.cal&&an)$('#calMsg').textContent='Microphone is on. Press Calibrate when the room is ready.';
+  if(devOn)devFill();
   $('#setup').classList.add('show');
 }
 function preview(){$('#preview').textContent=titleFor($('#tName').value,cur().name)}
