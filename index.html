@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.22">
+<meta name="version" content="v.23">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -39,6 +39,12 @@ h1{flex:1 1 320px;margin:0;font:700 clamp(28px,3.4vw,52px)/1.05 Fredoka,sans-ser
 .altn span{font-size:.42em;margin-left:6px}
 .zone{font:600 clamp(18px,1.7vw,24px) Fredoka,sans-serif}
 .next{font-weight:800;font-size:15px;opacity:.95}
+.pts{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:5px 14px 5px 10px;border-radius:999px;background:rgba(28,37,54,.55);font:600 clamp(16px,1.6vw,22px) Fredoka,sans-serif;text-shadow:none;position:relative}
+.pts b{font:700 clamp(22px,2.3vw,32px)/1 Fredoka,sans-serif;color:#ffd23f;font-variant-numeric:tabular-nums}
+.pts b::before{content:'★ ';color:#ffd23f}
+.pdelta{position:absolute;left:100%;margin-left:10px;font:700 22px Fredoka,sans-serif;opacity:0;transform:translateY(0);transition:opacity .2s}
+.pdelta.show{animation:pd 1.6s ease-out forwards}
+@keyframes pd{0%{opacity:0;transform:translateY(6px)}15%{opacity:1}100%{opacity:0;transform:translateY(-26px)}}
 .status{position:absolute;left:16px;bottom:72px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.93);font:600 clamp(16px,1.6vw,22px) Fredoka,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.12);max-width:calc(100% - 120px)}
 .dot{width:14px;height:14px;border-radius:50%;background:var(--soft);flex:none}
 .climbing .dot{background:#2bb673;animation:pulse 1.6s infinite}
@@ -133,7 +139,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" title="Quiet Climb version">v.22</span>
+      <span class="ver" title="Quiet Climb version">v.23</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="fsBtn">Full screen</button>
       <button class="btn" id="setBtn">Settings</button>
@@ -143,7 +149,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <section class="scene" id="scene">
       <canvas id="game" aria-label="The class climber on the cliff"></canvas>
       <div class="fog" id="fog"></div>
-      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div></div>
+      <div class="hud"><div class="altn"><b id="altV">0</b><span id="altU">ft</span></div><div class="zone" id="zoneV">Base camp</div><div class="next" id="nextV"></div><div class="pts" id="ptsBox"><b id="ptsV">0</b> points<span class="pdelta" id="pDelta"></span></div></div>
       <div class="status" id="status"><span class="dot"></span><span id="stText">Press Start to gear up</span></div>
       <div class="pbadge">Practice mode — progress isn't saved</div>
       <div class="banner" id="banner"><span class="bm" id="bM"></span><span class="bx"><b id="bT"></b><span id="bF"></span></span></div>
@@ -1034,12 +1040,13 @@ function loseTreasure(c){const owned=FINDS.filter(f=>c.finds[f.id]>0);if(!owned.
 function fallToast(c,tier,landed,n0){if(tier>=2&&landed<n0)toast('⬇️',tier===3?'Down three checkpoints!':'Down two checkpoints!','Too loud',`${c.name} slipped past the last checkpoint.`,0)}
 function doFall(c,tier){
   if(S.falls==='gentle')tier=1;
-  const n0=Math.floor(c.alt/ANCHOR+1e-9), d=dropTo(c,tier,n0);
+  const pb=points(c), n0=Math.floor(c.alt/ANCHOR+1e-9), d=dropTo(c,tier,n0);
   fall=Object.assign({vy:0,caught:false,t:0,tier,n0},d);
   lostItem=null;escT=0;peak=0;
+  c.pen=(c.pen||0)+[0,15,30,50][tier];
   if(tier===3)loseTreasure(c);
   fallToast(c,tier,d.n,n0);
-  setMode('fall');save();
+  setMode('fall');save();flashDelta(points(c)-pb);fall.pBefore=points(c);
 }
 // still loud (and louder) while falling or hanging: slip again to the next tier
 function escalate(c,dt){
@@ -1047,9 +1054,11 @@ function escalate(c,dt){
   const t=tierOf(smooth);
   if(smooth>goalVal()&&t>fall.tier){escT+=dt}else escT=Math.max(0,escT-dt);
   if(escT<.9)return;
-  escT=0;const nt=t, d=dropTo(c,nt,fall.n0);
+  escT=0;const nt=t;fall.pBefore=points(c);const d=dropTo(c,nt,fall.n0);
   if(d.n>=fall.n){fall.tier=nt;return}
+  c.pen=(c.pen||0)+[0,15,30,50][nt]-[0,15,30,50][fall.tier||1];
   Object.assign(fall,d,{tier:nt,caught:false,vy:Math.min(fall.vy,0),t:0});
+  flashDelta(points(c)-fall.pBefore);fall.pBefore=points(c);
   if(nt===3)loseTreasure(c);
   fallToast(c,nt,d.n,fall.n0);
   setMode('fall');save();
@@ -1073,15 +1082,15 @@ function tick(){
       case 'gear': if(mt>7.6){geared.add(c.id);setMode('climb')} break;
       case 'back': if(mt>1.4)setMode('climb'); break;
       case 'climb':{
-        if(overT>.5){setMode('look');break}
+        if(overT>.5){setMode('look');penalize(c,5);break}
         {const hy=HIP0+c.alt*U, bi=Math.floor((hy-HIP0)/IB); c.got=c.got||{};
           for(const bb of [bi,bi+1]){const it=itemAt(c,bb);if(it&&!c.got[bb]&&hy>=it.y-45&&hy<it.y+40){grab={b:bb,y:it.y,f:it.f};c.got[bb]=1;c.finds[it.f.id]=(c.finds[it.f.id]||0)+1;setMode('grab');devBoost=0;renderFinds();save();break}}}
         if(mode!=='climb')break;
         const b=Math.floor(c.alt/ANCHOR+1e-9)+1; let na=c.alt+PACE[S.pace][1]/60*dt*sp;
         if(na>=b*ANCHOR){na=b*ANCHOR;setMode('clip')}
         c.alt=na; quietAdd(c,dt*sp); break;}
-      case 'grab': if(overT>.5&&!(grab&&TIER(grab.f.r)===2)){setMode('look');break} quietAdd(c,dt*sp); if(mt>(grab?GDUR(grab.f):1.6))setMode('climb'); break;
-      case 'clip': if(overT>.5){setMode('look');break} quietAdd(c,dt*sp); if(mt>3)setMode('climb'); break;
+      case 'grab': if(overT>.5&&!(grab&&TIER(grab.f.r)===2)){setMode('look');penalize(c,5);break} quietAdd(c,dt*sp); if(mt>(grab?GDUR(grab.f):1.6))setMode('climb'); break;
+      case 'clip': if(overT>.5){setMode('look');penalize(c,5);break} quietAdd(c,dt*sp); if(mt>3)setMode('climb'); break;
       case 'look': if(overT>2.2){doFall(c,tierOf(peak));peak=0} else if(overT<.1){setMode('climb');peak=0} break;
       case 'fall': escalate(c,dt); if(mode==='fall'&&mt>2.2)setMode('hang'); break;
       case 'hang': escalate(c,dt); if(mode==='hang'&&calmT>3){setMode('recover');overT=0;peak=0;escT=0} break;
@@ -1096,9 +1105,23 @@ function tick(){
   $('#sessT').textContent=fmt(sessT);$('#sessQ').textContent=fmt(sessQ);
   hud();
 }
+/* ---------- points ----------
+   1 point per foot climbed + 10 per checkpoint reached + trophy points (common 5, rare 20, legendary 100)
+   + the class's quiet percentage, minus penalties for warnings and falls. Falls also cost the height they lose. */
+const TPTS=[5,20,100];
+function trophyPts(c){let p=0;for(const f of FINDS)p+=(c.finds[f.id]||0)*TPTS[TIER(f.r)];return p}
+function quietPct(c){return c.total>30?Math.round(c.quiet/c.total*100):0}
+function points(c){return Math.max(0,Math.floor(c.alt*FT)+10*Math.floor(c.alt/ANCHOR+1e-9)+trophyPts(c)+quietPct(c)-(c.pen||0))}
+function penalize(c,n){c.pen=(c.pen||0)+n;flashDelta(-n)}
+let shownPts=null, deltaT=0;
+function flashDelta(n){if(!n)return;const e=$('#pDelta');e.textContent=(n>0?'+':'−')+Math.abs(n).toLocaleString();e.style.color=n>0?'#7CFC9A':'#ff8a80';e.classList.remove('show');void e.offsetWidth;e.classList.add('show')}
 function hud(){
   const c=cur(), a=Math.floor(c.alt+1e-6);
   $('#altV').textContent=Math.floor(cv_(c.alt)+1e-6).toLocaleString();$('#altU').textContent=U_();
+  {const p=points(c);if(shownPts===null||Math.abs(p-shownPts)>2000)shownPts=p;
+   const gap=p-shownPts;if(gap>=40&&!c._lastJump){flashDelta(gap)}c._lastJump=gap>=40;
+   shownPts+=gap>0?Math.max(1,Math.ceil(gap*.25)):Math.min(-1,Math.floor(gap*.35));if(Math.abs(p-shownPts)<1)shownPts=p;
+   $('#ptsV').textContent=Math.round(shownPts).toLocaleString()}
   $('#zoneV').textContent=ZONES[zoneIdx(c.alt)][1];
   const to=ANCHOR-(c.alt%ANCHOR);
   $('#nextV').textContent=mode==='fall'||mode==='hang'?'Safe at the last checkpoint':`Next checkpoint in ${H_(to,'ceil')}`;
@@ -1166,7 +1189,7 @@ function gearBubble(c){
 function renderBoard(){
   const a=cur(), list=[...S.classes].sort((x,y)=>y.alt-x.alt);
   $('#board').innerHTML=list.map((c,i)=>{
-    const pct=c.total>30?Math.round(c.quiet/c.total*100)+'% quiet':'Not started';
+    const pct=c.alt>0||c.total>30?'★ '+points(c).toLocaleString()+' pts'+(c.total>30?' · '+quietPct(c)+'% quiet':''):'Not started';
     const wins=c.wins?` · ${c.wins} week${c.wins>1?'s':''} won`:'';
     return `<li class="row${c.id===a.id?' me':''}"><span class="rk">${i+1}</span><span class="sw" style="background:${c.color}"></span><span class="nm">${esc(c.name)}<small>${pct}${wins}</small></span><span class="alt">${H_(c.alt)}</span></li>`}).join('');
 }
@@ -1174,7 +1197,7 @@ function renderFinds(){
   // no total is shown on purpose: kids never know how many treasures exist
   const c=cur(), owned=FINDS.filter(f=>c.finds[f.id]>0).sort((a,b)=>TIER(b.r)-TIER(a.r)), n=[0,0,0];
   owned.forEach(f=>n[TIER(f.r)]+=c.finds[f.id]);
-  $('#findsH').textContent='Trophy case';
+  $('#findsH').innerHTML=`Trophy case <small>★ ${trophyPts(c).toLocaleString()} pts</small>`;
   $('#tally').innerHTML=TIERS_UI.map(([name,col,bg],i)=>`<div class="tl" style="border-color:${col};background:${bg};color:${col}"><b>${n[i]}</b><span>${name}</span></div>`).join('');
   $('#finds').innerHTML=owned.length?owned.map(f=>{const t=TIER(f.r),[name,col,bg]=TIERS_UI[t],x=c.finds[f.id];
     return `<div class="f t${t}" title="${esc(f.n)} · ${name}" style="border-color:${col};background:${bg}">${f.e}${x>1?`<i style="background:${col}">×${x}</i>`:''}</div>`}).join(''):'<div class="empty">Nothing yet. Keep climbing to find treasures on the ledges!</div>';
@@ -1237,7 +1260,7 @@ $('#devPanel').addEventListener('click',e=>{
   else if(k2==='eagle')spawn('eagle',2,{v:55,y:H*.3})
   else if(k2==='pebbles')pebT=0;
 });
-function switchClass(id){stop();S.active=id;sessT=sessQ=0;nextFind=rnd(150,360);const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;renderAll();save()}
+function switchClass(id){shownPts=null;stop();S.active=id;sessT=sessQ=0;nextFind=rnd(150,360);const c=cur();dispY=HIP0+c.alt*U;camY=dispY+25;lastPose=null;renderAll();save()}
 $('#classSel').onchange=e=>switchClass(e.target.value);
 $('#fsBtn').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
 const nb=$('#noiseBtn');
@@ -1312,7 +1335,7 @@ function twoStep(btn,label,fn){btn.onclick=()=>{if(btn.dataset.arm){fn();btn.tex
 twoStep($('#weekBtn'),'End the week and crown a winner',()=>{
   stop();const top=[...S.classes].sort((x,y)=>y.alt-x.alt)[0];
   if(top&&top.alt>0){top.wins=(top.wins||0)+1;$('#celeT').textContent=`${top.name} climbed highest this week!`;$('#celeS').textContent=`${H_(top.alt)}. Every climber starts again from base camp on Monday.`;$('#setup').classList.remove('show');$('#cele').classList.add('show')}
-  S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
+  S.classes.forEach(c=>{c.alt=0;c.best=0;c.quiet=0;c.total=0;c.zone=0;c.got={};c.ach={};c.pen=0;delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save();
 });
 twoStep($('#resetBtn'),'Reset all climbs to base camp',()=>{stop();S.classes.forEach(c=>{c.alt=0;c.zone=0;c.got={};c.ach={};delete rolls[c.id]});geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;renderAll();save()});
 twoStep($('#wipeBtn'),'Erase everything',()=>{stop();S=fresh();geared.clear();sessT=sessQ=0;dispY=HIP0;camY=dispY+25;lastPose=null;openSet();renderAll();save()});
