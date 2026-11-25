@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quiet Climb</title>
-<meta name="version" content="v.37">
+<meta name="version" content="v.38">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
@@ -162,7 +162,7 @@ label.lb{display:block;font-weight:800;margin:14px 0 6px}
     <div class="brand"><svg width="30" height="24" viewBox="0 0 30 24" aria-hidden="true"><path d="M1 23 11 5l5 8 4-6 9 16z" fill="#5b6b8c"/><path d="M11 5l3.2 5.6-1.6-.8-1.6 1.6-1.6-1.6-1.6.8z" fill="#fff"/></svg>Quiet Climb</div>
     <h1 id="title">Quiet Climb</h1>
     <div class="tools">
-      <span class="ver" id="verTag" title="Quiet Climb version — click for history" style="cursor:pointer">v.37</span>
+      <span class="ver" id="verTag" title="Quiet Climb version — click for history" style="cursor:pointer">v.38</span>
       <select class="btn" id="classSel" aria-label="Which class is in the room"></select>
       <button class="btn" id="pipBtn" title="Pop the game into a small window that stays on top">Mini window</button>
       <button class="btn" id="fsBtn">Full screen</button>
@@ -390,7 +390,7 @@ function goalVal(){
   return {silent:30,independent:45,partner:60}[S.goal];
 }
 // Version history shown in Settings. Add a new entry at the top with every update.
-const CHANGELOG=[{"v": "v.37", "d": "Nov 25, 2026", "items": ["Bonus points card names the teacher, e.g. “Ms. Neu awarded you 10 points!” (uses the teacher name from Settings)."]},{"v": "v.36", "d": "Nov 25, 2026", "items": ["Smart listening (AI): recognizes what it hears and only counts voices. Phones ringing, alarms, chairs, footsteps, typing, doors and (optionally) music are ignored. Runs on this computer; nothing is recorded or sent.","The voice bar shows what the game is hearing, e.g. “Hearing: phone or alarm (ignored)”.","Microphone sensitivity setting: Low, Medium (new default) or High."]},{"v": "v.35", "d": "Nov 17, 2026", "items": ["Higher-detail background flyers: birds, geese and gulls with bodies, tails and two-part wings; eagles with separate feathers; planes with cockpits, wheels and fins; banner flags in panels; hot-air balloons with shaded gores and woven baskets; butterflies and leaves with shading."]},{"v": "v.34", "d": "Nov 17, 2026", "items": ["Clouds are soft and hazy like real clouds (no more puffy polygon shapes), including the mist bands and the sea of clouds below."]},{"v": "v.33", "d": "Nov 17, 2026", "items": ["Higher-detail cliff: many small rock facets lit from the upper right, cracks, moss, a lit edge, and ledges and jutting rocks with tops and undersides.","Higher-detail background: mountains with lit and shaded faces and jagged snow caps, faceted clouds, sun with rays.","Settings → Graphics: Detailed or Simple (for slower computers)."]},{"v": "v.32", "d": "Nov 17, 2026", "items": ["American spelling: “meters” instead of “metres” everywhere."]},{"v": "v.31", "d": "Nov 17, 2026", "items": ["Teacher bonus points: click the ★ points badge for +5, +10 or +25, live while the game runs; click anywhere else to close.","Mini window: pops the climb into a small always-on-top window so you can use other tabs while it keeps running (Chrome or Edge)."]},{"v": "v.30", "d": "Nov 17, 2026", "items": ["Customize the mountain (Settings): school name, messages for every class or one class, and kids’ names.","Messages appear on the cliff as wooden signs, nailed banners or words carved into the rock.","Banner planes can cheer for your school.","Dev menu: Custom sign button."]},{"v": "v.29", "d": "Nov 17, 2026", "items": ["The race chip fades in when something changes, stays about 8 seconds, then fades out and pops back now and then (every 20 s when a class is close, otherwise every 45 s).","The chip wraps onto two lines so it never covers the climber."]},{"v": "v.28", "d": "Nov 17, 2026", "items": ["Chip now says “Another class is higher up the mountain… let’s try to catch them!”"]},{"v": "v.27", "d": "Nov 17, 2026", "items": ["Version history in Settings (this list); click the version stamp to open it."]}, {"v": "v.26", "d": "Nov 17, 2026", "items": ["“Next to beat” chip under the points: names the class ahead only within 100 ft, warns when a class is close behind, shows when you’re in the lead.", "Leaderboard hidden by default (Settings → Leaderboard to show it).", "Rival flags on the cliff show ??? until you’re close.", "End of the week reveals the full final standings with medals."]}, {"v": "v.25", "d": "Nov 17, 2026", "items": ["Staying loud drains 1 point every 2 seconds.", "Red “points lost” bar and shaking points box so kids can see points slipping away.", "Bigger red and green point pop-ups."]}, {"v": "v.24", "d": "Nov 17, 2026", "items": ["Fixed the points counter flickering back and forth."]}, {"v": "v.23", "d": "Nov 17, 2026", "items": ["Live points score: 1 per foot, 10 per checkpoint, treasure points, plus quiet %.", "Trophy case points: common 5, rare 20, legendary 100.", "Points lost for warnings and falls."]}, {"v": "v.22", "d": "Nov 17, 2026", "items": ["Developer menu in Settings (PIN): jump to a height and play any animation on demand."]}, {"v": "v.21", "d": "Nov 17, 2026", "items": ["Tough falls max out at 3 checkpoints (never back to base camp) and trigger at lower noise.", "If it gets louder while he’s hanging, he slips further, live."]}, {"v": "v.20", "d": "Nov 17, 2026", "items": ["Skydivers in the background: freefall, then parachutes, sometimes in groups."]}, {"v": "v.19", "d": "Nov 17, 2026", "items": ["Height-fact banners switch between feet and meters."]}, {"v": "v.18", "d": "Nov 17, 2026", "items": ["Heights shown in feet by default, with a Feet / Meters setting."]}, {"v": "v.17", "d": "Nov 17, 2026", "items": ["Birds near and far (eagles, geese, gulls), small planes with banners, very rare silly flybys."]}, {"v": "v.16", "d": "Nov 17, 2026", "items": ["Climber flails and swings while hanging until the room is quiet.", "Rare treasures fly in; legendary ones hide in a hole in the rock.", "The cliff changes colour and shape every 100 m, with a mist band and label.", "Falling pebbles and drifting leaves."]}, {"v": "v.15", "d": "Nov 17, 2026", "items": ["Trophy case keeps the total a mystery and counts Common, Rare and Legendary in matching colours."]}, {"v": "v.14", "d": "Nov 17, 2026", "items": ["Progress saves automatically and survives reloads and updates; backup file save and load.", "Carabiner clip at every checkpoint is a clear three-step moment.", "Louder noise means bigger falls (several levels)."]}, {"v": "v.13", "d": "Nov 17, 2026", "items": ["Clear microphone messages and a Try again button, no reload needed."]}, {"v": "v.12", "d": "Nov 17, 2026", "items": ["Faster climb speeds: Slow, Normal, Fast and a new Turbo."]}, {"v": "v.11", "d": "Nov 17, 2026", "items": ["Version stamp next to the class picker."]}, {"v": "v.10", "d": "Nov 17, 2026", "items": ["100 real-world height achievements pop up as banners with fun facts."]}, {"v": "v.9", "d": "Nov 17, 2026", "items": ["Mountaineering boots with crampon spikes.", "Rock chips, sparks and dust on every axe hit, handhold and step."]}, {"v": "v.8", "d": "Nov 17, 2026", "items": ["Game put on GitHub so it can have a live link with the microphone."]}, {"v": "v.7", "d": "Nov 17, 2026", "items": ["Back to the code-drawn climber, rebuilt rounder and cleaner (cut-out version scrapped)."]}, {"v": "v.6", "d": "Nov 17, 2026", "items": ["Tried a climber cut out of the pose sheet (scrapped)."]}, {"v": "v.5", "d": "Nov 17, 2026", "items": ["Every treasure is random; rare and legendary finds get big celebrations.", "Shareable preview link."]}, {"v": "v.4", "d": "Nov 17, 2026", "items": ["Climber poses based on the reference sheet: base camp, reach, push, clip, pause, caught."]}, {"v": "v.3", "d": "Nov 17, 2026", "items": ["Elbows bend the right way.", "Slower climb, treasures on ledges to collect, trophy case.", "Right-hand bar shows progress to the next checkpoint."]}, {"v": "v.2", "d": "Nov 17, 2026", "items": ["Close-up side view: cliff on the left, full-size climber in the middle, no summit.", "Gear-up at base camp, checkpoints, look-then-fall when it’s loud.", "Microphone choice and calibration; zones and scenery as you climb."]}, {"v": "v.1", "d": "Nov 17, 2026", "items": ["First build: classes race up a mountain trail; quiet moves the climber up, noise brings wind.", "Teacher name in the title, volume goals, practice mode."]}];
+const CHANGELOG=[{"v": "v.38", "d": "Nov 25, 2026", "items": ["Smart listening runs in the background (its own thread), so it no longer makes the animation stutter."]},{"v": "v.37", "d": "Nov 25, 2026", "items": ["Bonus points card names the teacher, e.g. “Ms. Neu awarded you 10 points!” (uses the teacher name from Settings)."]},{"v": "v.36", "d": "Nov 25, 2026", "items": ["Smart listening (AI): recognizes what it hears and only counts voices. Phones ringing, alarms, chairs, footsteps, typing, doors and (optionally) music are ignored. Runs on this computer; nothing is recorded or sent.","The voice bar shows what the game is hearing, e.g. “Hearing: phone or alarm (ignored)”.","Microphone sensitivity setting: Low, Medium (new default) or High."]},{"v": "v.35", "d": "Nov 17, 2026", "items": ["Higher-detail background flyers: birds, geese and gulls with bodies, tails and two-part wings; eagles with separate feathers; planes with cockpits, wheels and fins; banner flags in panels; hot-air balloons with shaded gores and woven baskets; butterflies and leaves with shading."]},{"v": "v.34", "d": "Nov 17, 2026", "items": ["Clouds are soft and hazy like real clouds (no more puffy polygon shapes), including the mist bands and the sea of clouds below."]},{"v": "v.33", "d": "Nov 17, 2026", "items": ["Higher-detail cliff: many small rock facets lit from the upper right, cracks, moss, a lit edge, and ledges and jutting rocks with tops and undersides.","Higher-detail background: mountains with lit and shaded faces and jagged snow caps, faceted clouds, sun with rays.","Settings → Graphics: Detailed or Simple (for slower computers)."]},{"v": "v.32", "d": "Nov 17, 2026", "items": ["American spelling: “meters” instead of “metres” everywhere."]},{"v": "v.31", "d": "Nov 17, 2026", "items": ["Teacher bonus points: click the ★ points badge for +5, +10 or +25, live while the game runs; click anywhere else to close.","Mini window: pops the climb into a small always-on-top window so you can use other tabs while it keeps running (Chrome or Edge)."]},{"v": "v.30", "d": "Nov 17, 2026", "items": ["Customize the mountain (Settings): school name, messages for every class or one class, and kids’ names.","Messages appear on the cliff as wooden signs, nailed banners or words carved into the rock.","Banner planes can cheer for your school.","Dev menu: Custom sign button."]},{"v": "v.29", "d": "Nov 17, 2026", "items": ["The race chip fades in when something changes, stays about 8 seconds, then fades out and pops back now and then (every 20 s when a class is close, otherwise every 45 s).","The chip wraps onto two lines so it never covers the climber."]},{"v": "v.28", "d": "Nov 17, 2026", "items": ["Chip now says “Another class is higher up the mountain… let’s try to catch them!”"]},{"v": "v.27", "d": "Nov 17, 2026", "items": ["Version history in Settings (this list); click the version stamp to open it."]}, {"v": "v.26", "d": "Nov 17, 2026", "items": ["“Next to beat” chip under the points: names the class ahead only within 100 ft, warns when a class is close behind, shows when you’re in the lead.", "Leaderboard hidden by default (Settings → Leaderboard to show it).", "Rival flags on the cliff show ??? until you’re close.", "End of the week reveals the full final standings with medals."]}, {"v": "v.25", "d": "Nov 17, 2026", "items": ["Staying loud drains 1 point every 2 seconds.", "Red “points lost” bar and shaking points box so kids can see points slipping away.", "Bigger red and green point pop-ups."]}, {"v": "v.24", "d": "Nov 17, 2026", "items": ["Fixed the points counter flickering back and forth."]}, {"v": "v.23", "d": "Nov 17, 2026", "items": ["Live points score: 1 per foot, 10 per checkpoint, treasure points, plus quiet %.", "Trophy case points: common 5, rare 20, legendary 100.", "Points lost for warnings and falls."]}, {"v": "v.22", "d": "Nov 17, 2026", "items": ["Developer menu in Settings (PIN): jump to a height and play any animation on demand."]}, {"v": "v.21", "d": "Nov 17, 2026", "items": ["Tough falls max out at 3 checkpoints (never back to base camp) and trigger at lower noise.", "If it gets louder while he’s hanging, he slips further, live."]}, {"v": "v.20", "d": "Nov 17, 2026", "items": ["Skydivers in the background: freefall, then parachutes, sometimes in groups."]}, {"v": "v.19", "d": "Nov 17, 2026", "items": ["Height-fact banners switch between feet and meters."]}, {"v": "v.18", "d": "Nov 17, 2026", "items": ["Heights shown in feet by default, with a Feet / Meters setting."]}, {"v": "v.17", "d": "Nov 17, 2026", "items": ["Birds near and far (eagles, geese, gulls), small planes with banners, very rare silly flybys."]}, {"v": "v.16", "d": "Nov 17, 2026", "items": ["Climber flails and swings while hanging until the room is quiet.", "Rare treasures fly in; legendary ones hide in a hole in the rock.", "The cliff changes colour and shape every 100 m, with a mist band and label.", "Falling pebbles and drifting leaves."]}, {"v": "v.15", "d": "Nov 17, 2026", "items": ["Trophy case keeps the total a mystery and counts Common, Rare and Legendary in matching colours."]}, {"v": "v.14", "d": "Nov 17, 2026", "items": ["Progress saves automatically and survives reloads and updates; backup file save and load.", "Carabiner clip at every checkpoint is a clear three-step moment.", "Louder noise means bigger falls (several levels)."]}, {"v": "v.13", "d": "Nov 17, 2026", "items": ["Clear microphone messages and a Try again button, no reload needed."]}, {"v": "v.12", "d": "Nov 17, 2026", "items": ["Faster climb speeds: Slow, Normal, Fast and a new Turbo."]}, {"v": "v.11", "d": "Nov 17, 2026", "items": ["Version stamp next to the class picker."]}, {"v": "v.10", "d": "Nov 17, 2026", "items": ["100 real-world height achievements pop up as banners with fun facts."]}, {"v": "v.9", "d": "Nov 17, 2026", "items": ["Mountaineering boots with crampon spikes.", "Rock chips, sparks and dust on every axe hit, handhold and step."]}, {"v": "v.8", "d": "Nov 17, 2026", "items": ["Game put on GitHub so it can have a live link with the microphone."]}, {"v": "v.7", "d": "Nov 17, 2026", "items": ["Back to the code-drawn climber, rebuilt rounder and cleaner (cut-out version scrapped)."]}, {"v": "v.6", "d": "Nov 17, 2026", "items": ["Tried a climber cut out of the pose sheet (scrapped)."]}, {"v": "v.5", "d": "Nov 17, 2026", "items": ["Every treasure is random; rare and legendary finds get big celebrations.", "Shareable preview link."]}, {"v": "v.4", "d": "Nov 17, 2026", "items": ["Climber poses based on the reference sheet: base camp, reach, push, clip, pause, caught."]}, {"v": "v.3", "d": "Nov 17, 2026", "items": ["Elbows bend the right way.", "Slower climb, treasures on ledges to collect, trophy case.", "Right-hand bar shows progress to the next checkpoint."]}, {"v": "v.2", "d": "Nov 17, 2026", "items": ["Close-up side view: cliff on the left, full-size climber in the middle, no summit.", "Gear-up at base camp, checkpoints, look-then-fall when it’s loud.", "Microphone choice and calibration; zones and scenery as you climb."]}, {"v": "v.1", "d": "Nov 17, 2026", "items": ["First build: classes race up a mountain trail; quiet moves the climber up, noise brings wind.", "Teacher name in the title, volume goals, practice mode."]}];
 const FT=3.28084;
 // Show a banner's numbers in the chosen unit. Where the original measurement was in feet, the exact source figure is used.
 function bannerText(a){
@@ -1213,39 +1213,81 @@ const VOICE=[0,1,2,3,4,6,7,8,9,10,11,12,13,14,15,16,17,18,19,24,25,26,27,29,31,3
 const PHONE=[382,383,384,385,386,387,388,389,392,393,394,475,349,195,197,198,199,200,201,190,404];
 const BUMPS=[47,48,56,57,58,62,348,350,351,352,353,354,355,356,357,372,375,378,380,381,398,401,402,405,406,407,409,431,454,469,473,474,480,481,483,485,42,43,44,45];
 const MUSIC=Array.from({length:145},(_,i)=>132+i);
-let ai={state:'off',model:null,fac:1,label:'',busy:false,ring:null,pos:0,sr:48000,proc:null,t:0,last:0};
-function lookDelay(){return aiOn()&&ai.state==='ready'?1.1:.5}
+let ai={state:'off',fac:1,label:'',worker:null,node:null,proc:null,ring:null,pos:0,sr:48000,t:0,last:0,sent:0};
+function lookDelay(){return aiOn()&&ai.state==="ready"?1.3:.5}
 function aiOn(){return (S.ai||'on')==='on'&&!practice}
 function aiFactor(){return aiOn()&&ai.state==='ready'?ai.fac:1}
-function loadScript(src){return new Promise((ok,no)=>{if(window.tf)return ok();const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error('load '+src));document.head.appendChild(e)})}
+// The sound model runs in a background worker, and the microphone is sampled in an audio worklet,
+// so neither ever pauses the animation.
+const AI_WORKER=`let model=null,busy=false,G=null;
+onmessage=async e=>{const d=e.data;
+  if(d.t==='init'){G=d.groups;try{importScripts(d.base+'tf.min.js');await tf.setBackend('cpu');model=await tf.loadGraphModel(d.base+'yamnet/model.json');
+      tf.tidy(()=>{model.execute(tf.zeros([15600]))});postMessage({t:'ready'})}catch(err){postMessage({t:'fail',e:String(err)})}
+    d.port.onmessage=m=>run(m.data);return}
+  if(d.t==='pcm')run(d.x)};
+async function run(x){if(!model||busy)return;busy=true;
+  try{const inp=tf.tensor1d(x),out=model.execute(inp),sc=Array.isArray(out)?out[0]:out,mean=sc.mean(0),v=await mean.data();
+    tf.dispose([inp,mean].concat(Array.isArray(out)?out:[out]));
+    const sum=ids=>Math.min(1,ids.reduce((t,i)=>t+v[i],0));
+    postMessage({t:'scores',vo:sum(G.voice),ph:sum(G.phone),bu:sum(G.bumps),mu:v[132]+.5*v[133]})}catch(err){}
+  busy=false}`;
+const AI_WORKLET=`class QCTap extends AudioWorkletProcessor{
+  constructor(){super();this.ratio=sampleRate/16000;this.buf=new Float32Array(15600);this.pos=0;this.filled=0;this.acc=0;this.n=0;this.ph=0;this.since=0;this.out=null;
+    this.port.onmessage=e=>{this.out=e.data.port}}
+  process(ins){const ch=ins[0]&&ins[0][0];if(!ch)return true;
+    for(let i=0;i<ch.length;i++){this.acc+=ch[i];this.n++;this.ph+=1;
+      if(this.ph>=this.ratio){this.ph-=this.ratio;this.buf[this.pos]=this.acc/this.n;this.pos=(this.pos+1)%15600;this.acc=0;this.n=0;this.filled++;this.since++}}
+    if(this.out&&this.filled>=15600&&this.since>=12000){this.since=0;const x=new Float32Array(15600);x.set(this.buf.subarray(this.pos));x.set(this.buf.subarray(0,this.pos),15600-this.pos);this.out.postMessage(x,[x.buffer])}
+    return true}}
+registerProcessor('qc-tap',QCTap);`;
+function blobURL(src,type){return URL.createObjectURL(new Blob([src],{type}))}
 async function aiStart(){
   if(!aiOn()||!ctx||!micSrc)return;
-  if(!ai.proc){ai.sr=ctx.sampleRate;ai.ring=new Float32Array(Math.ceil(ai.sr*1.05));ai.pos=0;
-    ai.proc=ctx.createScriptProcessor(2048,1,1);ai.proc.onaudioprocess=e=>{const d=e.inputBuffer.getChannelData(0),R2=ai.ring;for(let i=0;i<d.length;i++){R2[ai.pos]=d[i];ai.pos=(ai.pos+1)%R2.length}};
-    const z=ctx.createGain();z.gain.value=0;micSrc.connect(ai.proc);ai.proc.connect(z);z.connect(ctx.destination)}
-  if(ai.state==='ready'||ai.state==='loading')return;
+  if(ai.state==='loading'||ai.state==='ready'){aiTap();return}
   ai.state='loading';aiMsg();
-  try{await loadScript(AIBASE+'tf.min.js');ai.model=await tf.loadGraphModel(AIBASE+'yamnet/model.json');ai.state='ready'}
-  catch(e){ai.state='failed';console.warn(e)}
-  aiMsg();
-}
-async function aiStep(dt){
-  if(!aiOn()||ai.state!=='ready'||ai.busy||!ai.ring)return;
-  ai.t+=dt;if(ai.t<.4)return;ai.t=0;ai.busy=true;
   try{
-    const N=15600,R2=ai.ring,L=R2.length,need=Math.round(.975*ai.sr),x=new Float32Array(N);
-    for(let i=0;i<N;i++){const src=(ai.pos-need+i*need/N+L*2)%L,j=Math.floor(src),f=src-j;x[i]=R2[j%L]*(1-f)+R2[(j+1)%L]*f}
-    const inp=tf.tensor1d(x),[sc,emb,spec]=ai.model.execute(inp),mean=sc.mean(0),v=await mean.data();
-    [inp,sc,emb,spec,mean].forEach(t=>t.dispose());
-    const sum=ids=>Math.min(1,ids.reduce((t,i)=>t+v[i],0)), vo=sum(VOICE), ph=sum(PHONE), bu=sum(BUMPS), mu=(S.aiMusic||'ignore')==='ignore'?v[132]+.5*v[133]:0;
-    const ig=Math.max(ph,bu,mu), loud=smoothRaw>8;
-    let target,label;
-    if(vo>=.2){target=1;label='talking'}
-    else if(ig>=.2){target=.08;label=ph>=Math.max(bu,mu)?'phone or alarm (ignored)':mu>=bu?'music (ignored)':'classroom bumps (ignored)'}
-    else{target=.5;label=loud?'other sounds':'quiet'}
-    ai.fac+=(target-ai.fac)*(target>ai.fac?.7:.55);ai.label=loud||vo>=.2?label:'quiet';
-  }catch(e){console.warn(e)}
-  ai.busy=false;
+    const base=new URL(AIBASE,location.href).href;
+    ai.worker=new Worker(blobURL(AI_WORKER,'text/javascript'));
+    ai.chan=new MessageChannel();
+    ai.worker.onmessage=e=>aiResult(e.data);
+    ai.worker.postMessage({t:'init',base,groups:{voice:VOICE,phone:PHONE,bumps:BUMPS},port:ai.chan.port2},[ai.chan.port2]);
+    await aiTap();
+  }catch(e){ai.state='failed';console.warn(e);aiMsg()}
+}
+async function aiTap(){
+  // connect the microphone to the sampler (re-done when the microphone changes)
+  try{if(ai.node){ai.node.disconnect()}}catch(e){}
+  try{if(ai.proc){ai.proc.disconnect()}}catch(e){}
+  ai.node=null;ai.proc=null;
+  const z=ctx.createGain();z.gain.value=0;z.connect(ctx.destination);
+  if(ctx.audioWorklet){
+    if(!ai.wl){await ctx.audioWorklet.addModule(blobURL(AI_WORKLET,'text/javascript'));ai.wl=1}
+    ai.node=new AudioWorkletNode(ctx,'qc-tap');const ch2=new MessageChannel();
+    ai.node.port.postMessage({port:ch2.port1},[ch2.port1]);ch2.port2.onmessage=m=>{if(ai.worker)ai.worker.postMessage({t:'pcm',x:m.data},[m.data.buffer])};
+    micSrc.connect(ai.node);ai.node.connect(z);
+  }else{ // older browsers: light sampling on the page, the model still runs in the worker
+    ai.sr=ctx.sampleRate;ai.ring=new Float32Array(Math.ceil(ai.sr*1.05));ai.pos=0;
+    ai.proc=ctx.createScriptProcessor(2048,1,1);ai.proc.onaudioprocess=e=>{const d=e.inputBuffer.getChannelData(0),R2=ai.ring;for(let i=0;i<d.length;i++){R2[ai.pos]=d[i];ai.pos=(ai.pos+1)%R2.length}};
+    micSrc.connect(ai.proc);ai.proc.connect(z);
+  }
+}
+function aiStep(dt){
+  if(ai.node||!ai.proc||!ai.worker||ai.state!=='ready')return;
+  ai.t+=dt;if(ai.t<.75)return;ai.t=0;
+  const N=15600,R2=ai.ring,L=R2.length,need=Math.round(.975*ai.sr),x=new Float32Array(N);
+  for(let i=0;i<N;i++){const src=(ai.pos-need+i*need/N+L*2)%L,j=Math.floor(src),f=src-j;x[i]=R2[j%L]*(1-f)+R2[(j+1)%L]*f}
+  ai.worker.postMessage({t:'pcm',x},[x.buffer]);
+}
+function aiResult(d){
+  if(d.t==='ready'){ai.state='ready';aiMsg();return}
+  if(d.t==='fail'){ai.state='failed';console.warn(d.e);aiMsg();return}
+  if(d.t!=='scores'||!aiOn())return;
+  const mu=(S.aiMusic||'ignore')==='ignore'?d.mu:0, ig=Math.max(d.ph,d.bu,mu), loud=smoothRaw>8;
+  let target,label;
+  if(d.vo>=.2){target=1;label='talking'}
+  else if(ig>=.2){target=.08;label=d.ph>=Math.max(d.bu,mu)?'phone or alarm (ignored)':mu>=d.bu?'music (ignored)':'classroom bumps (ignored)'}
+  else{target=.5;label=loud?'other sounds':'quiet'}
+  ai.fac+=(target-ai.fac)*(target>ai.fac?.7:.55);ai.label=loud||d.vo>=.2?label:'quiet';
 }
 function aiMsg(){
   const t=!aiOn()?(practice?'Smart listening is off in practice mode.':'Smart listening is off: the climber reacts to overall volume.')
@@ -1262,7 +1304,7 @@ async function startMic(){
     if(S.micId)a.deviceId={exact:S.micId};
     try{stream=await navigator.mediaDevices.getUserMedia({audio:a})}
     catch(e){if(!S.micId)throw e;delete a.deviceId;S.micId='';stream=await navigator.mediaDevices.getUserMedia({audio:a})}
-    const src=ctx.createMediaStreamSource(stream);micSrc=src;if(ai.proc){try{ai.proc.disconnect()}catch(e){}ai.proc=null}an=ctx.createAnalyser();an.fftSize=2048;src.connect(an);buf=new Float32Array(an.fftSize);
+    const src=ctx.createMediaStreamSource(stream);micSrc=src;an=ctx.createAnalyser();an.fftSize=2048;src.connect(an);buf=new Float32Array(an.fftSize);
     if(ctx.state==='suspended')await ctx.resume();
     listMics();aiStart();return true;
   }catch(e){an=null;micErr=(e&&e.name)||'Error';return false}
